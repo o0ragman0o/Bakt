@@ -118,12 +118,12 @@ Returns the balance of uncommitted ether funds.
 function committedEther();
 ```
 Returns the combined balance of ether committed to holder accounts, unclaimed dividends and values in pending transactions.
-### trustee        
+### trustee
 ```
 function trustee()
 ```
 Returns the address of the currently elected trustee
-### tokenPrice    
+### tokenPrice
 ```
 function tokenPrice();
 ```
@@ -151,12 +151,12 @@ function pendingTxs(uint);
 ```
 Returns transaction details cast from struct TX to array
 `uint8` The index of a pending transaction
-### ptxHead   
+### ptxHead
 ```
 function ptxHead();
 ```
 Return the pending transaction index of the youngest pending transaction
-### ptxTail    
+### ptxTail
 ```
 function ptxTail();
 ```
@@ -168,7 +168,7 @@ Returns the pending transaction index of the oldest pending transaction
 function totalSupply();
 ```
 Return total count of tokens
-###  balanceOf
+### balanceOf
 ```
 function balanceOf(address _addr) constant returns (uint);
 ```
@@ -204,7 +204,7 @@ function allowance(address _owner, address _spender) constant returns (uint256);
 Returns the amount of remaining tokens that an approved thrid-party can send
 `_owner` The adddress of the holder owning tokens
 `_spender` The address of the account approved to transfer tokens
-##Security Functions
+## Security Functions
 ### PANIC
 ```
 function PANIC();
@@ -236,7 +236,7 @@ function blockPendingTx(uint _txIdx);
 ```
 Block a pending transaction with the given index.  Transactions can be blocked by any holder at any time but must still be cleared from the pending transactions queue once the time lock has expired.
 `_txIdx`  _txIdx Index of the transaction in the pending transactions table.
-##Holder Functions
+## Holder Functions
 ### vote
 ```
 function vote(address _candidate) returns (bool);
@@ -297,7 +297,7 @@ function updateDividendsFor(address _addr) returns (bool);
 ```
 To synchronise a Holder account with the dividends table.  This is required before any manipulations to token balances such as `purchase()` `redeem()` `transfer()` and `transferFrom()`.  If the account has not been updated for some time then this function may need to be called repeatedly until it is fully synchronised again
 `_addr` The address of a holder to update
-##Trustee Functions
+## Trustee Functions
 ### execute
 ```
 function execute(address _to, uint _value, bytes _data) returns (uint8);
@@ -318,7 +318,7 @@ function addHolders(address[] _addrs) returns (bool);
 ```
 Allows the Trustee to register new holder accounts by providing an array of addresses
 `_addrs` and array of upto 20 addresses
-### Events 
+## Events 
 ```
 Deposit(sender, value);
 ```
