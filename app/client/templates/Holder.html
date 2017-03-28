@@ -1,0 +1,71 @@
+<Template name="Holder">
+	<div class="panel">
+	<h1>{{> dapp_identicon identity=holderAddr class="dapp-small"}} Holder</h1>
+		<div id="accountSelect">{{> dapp_selectAccount accounts=accounts class="dapp_small"}}</div>
+ 		{{#with holder}}
+			<div><label>Token Balance</label> {{tokenBalance}}</div>
+			<div><label>Ether Balance</label> {{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;</div>
+		{{/with}}
+		<h3></h3>
+		<div class="{{isHolder}}">
+		<!-- <div> -->
+			<div class="{{inPanicked}}">Can calm after: {{calmTime}}</div>
+			<div>
+				<button id="btn_panic" class="">
+					<label>Panic</label>
+				</button>
+				<button id="btn_calm" class="{{canCalm}}">
+					<label>Calm</label>
+				</button>
+			</div>
+			<div class="{{notPanicked}} {{isHolder}}">
+				<div>
+				<button id="btn_transfer" class="{{noUnclaimed}}">
+					<label>Transfer</label>
+				</button>
+				<button id="btn_allow" class="{{noUnclaimed}}">
+					<label>Allow</label>
+				</button>
+				<button id="btn_claim" class="{{hasUnclaimed}}">
+					<label><strong>Update</strong></label>
+				</button>
+				</div>
+				<div>
+				<button id="btn_purchase" class="{{noUnclaimed}}">
+					<label>Purchase</label>
+				</button>
+				<button id="btn_redeem" class="{{noUnclaimed}}">
+					<label>Redeem</label>
+				</button>
+				<button id="btn_withdraw" class="{{noUnclaimed}}">
+					<label>Withdraw</label>
+				</button>
+				</div>
+			</div>
+			<div class="{{isTrustee}} {{notPanicked}}">
+				<button id="btn_execute" class="">
+					<label>Execute</label>
+				</button>
+				<button id="btn_payDividends" class="">
+					<label>Pay Dividends</label>
+				</button>
+				<button id="btn_setPrice" class="">
+					<label>Set Price</label>
+				</button>
+				<button id="btn_addHolders" class="">
+					<label>Add Holder</label>
+				</button>
+			</div>
+		</div>
+		<div class="foot {{isHolder}}">
+			<label>Voting For</label>
+			<button id="btn_vote">
+			{{#with holder}}
+				{{> dapp_identicon identity=votingFor class="dapp-tiny"}}{{votingFor}}
+			{{/with}}
+			</button>
+		</div>
+	</div>
+
+</Template>
+

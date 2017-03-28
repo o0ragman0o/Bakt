@@ -1,0 +1,164 @@
+<Template name="ChangeHolder">
+	<h3>Select Holder Account</h3>
+		{{> dapp_selectAccount accounts=accounts}}
+<!-- 	<ul>
+	{{#each accounts}}
+		<li>
+		{{> dapp_selectAccount accounts=accounts}}
+
+		<button>
+		{{this.name}}
+		{{> dapp_identicon identity=this.address class="dapp-small"}}{{this.address}}
+		</button>
+		</li>
+	{{/each}}
+	</ul>
+ --></Template>
+
+<Template name="PayInto">
+	<h3>Pay Into Contract</h3>
+	<div>
+	Use this to send money to this Bakt contract.
+	</div>
+	<form>
+		<input name="ethValue" type="number" placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;'/>
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Withdraw">
+	<h3>Withdraw</h3>
+	Withdraw Ether from your holder account.<br>
+	Balance {{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;
+	<form>
+		<input name="withdraw" type="number" placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;' step="any"/>
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Transfer">
+	<h3>Transfer</h3>
+	Transfer tokens to another holder.
+	<form>
+		<label>To</label>
+		{{> dapp_addressInput id="to" value=address class="dapp-medium"}}	
+
+		<label>Amount</label>
+		<input id="amount" placeholder="{{tokenBalance}}"/>
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Allow">
+	<h3>Allow</h3>
+	<form>
+		<label>Sender</label>
+		{{> dapp_addressInput name="allow" value=address class="dapp-medium"}}
+
+		<label>Amount</label>
+		<input name="amount" type="number" placeholder="{{tokenBalance}}" />
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Purchase">
+	<h3>Purchase Tokens</h3>
+	<form oninput="total.value=parseFloat(amount.value) * {{dapp_formatBalance price "0,0.00[0000]" "ether"}}">
+		<div>At {{dapp_formatBalance price "0,0.00[0000]" "ether"}} ether/token</div>
+		<label>Amount</label>
+		<input name="amount" type="number" minimum="0" maximum="{{max}}"/>
+		<label for="total">Total</label>
+		<output name="total" for="amount"></output>&Xi;
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Redeem">
+	<h3>Redeem Tokens</h3>
+	<form oninput="total.value=parseInt(rAmount.value) * {{dapp_formatBalance rPrice "0,0.00[0000]" "ether"}}">
+		<div>At {{dapp_formatBalance rPrice "0,0.00[0000]" "ether"}} ether/token</div>
+		<label>Amount</label>
+		<input name="rAmount" type="number" minimum="0" maximum="{{tokenBalance}}" placeholder="{{tokenBalance}}"/>
+		<label for="total">Total</label>
+
+		<output name="total" for="rAmount"></output>&Xi;
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="PayDividends">
+	<h3>Pay Dividends</h3>
+	<form>
+		<input name="dividends" type="number" minimum="0" maximum="{{fundBalance}}"
+		value={{dapp_formatBalance fundBalance "0,0.00[0000]" "ether"}} step="any"/>
+		<input type="submit" value="Pay">
+	</form>
+</Template>
+
+<Template name="AddHolders">
+	<h3>Add Holders</h3>
+	<form>
+	{{> dapp_addressInput value=holderAddr class="dapp-medium"}}
+	<input type="submit" />
+	</form>
+</Template>
+
+<Template name="SetPrice">
+	<h3>Set Token Price</h3>
+	<form>
+		<label>Token Price</label>
+		<input name="tokenPrice" type="number" minimum='{{dapp_formatBalance tokenPrice "0,0.00[0000]" "ether"}}' 
+			placeholder='{{dapp_formatBalance tokenPrice "0,0.00[0000]" "ether"}}' step="any"/>
+		<input type="submit" value="Ok" />
+	</form>
+</Template>
+
+<Template name="Execute">
+	<h3>Send from Bakt</h3>
+	<form>
+		<label>Send To</label>
+		{{> dapp_addressInput class="dapp-medium"}}
+		<label>Value</label>
+		<input name="sendValue" type="number" step="all" />
+<!-- 		<label>Gas</label>
+		<input name="gas" type="number" value="90000"/>
+ -->		<label>Data</label>
+		{{> dapp_dataTextarea cols="20" rows="4"}}
+		<input type="submit" value="Send">
+	</form>
+</Template>
+
+<Template name="HolderList">
+	<h2>Vote For</h2>
+	{{#each addrList}}
+		<button>
+			{{> dapp_identicon identity=this class="dapp-tiny"}}
+			<span name="address">{{this}}</span>
+		</button>
+	{{/each}}
+</Template>
+
+<Template name="Panic">
+	<h3>PANIC</h3>
+	<strong>WARNING!</strong> This action will freeze functionality of Bakt for a minimum of 2 days.
+	You <strong>WILL NOT</strong> be able to:
+	<ul>
+		<li>Withdraw funds</li>
+		<li>Allow pending transactions</li>
+		<li>Transfer tokens</li>
+		<li>Buy or Redeem</li>
+		<li>Claim dividends</li>
+		<li>Change contracts operational state</li>
+	</ul>
+	You <strong>WILL</strong> be able to:
+	<ul>
+		<li>Change your vote</li>
+		<li>Block pending transactions</li>
+		<li>Extend the Panic time</li>
+		<li>Pay to contract</li>
+	</ul>
+	<form>
+		<input type="checkbox" name="validation"><label for="validation">Are you sure you want to cause a Panic?</label>
+		<input type="submit">
+	</form>
+</Template>

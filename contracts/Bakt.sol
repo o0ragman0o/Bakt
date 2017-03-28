@@ -98,9 +98,6 @@ contract BaktInterface
     /// @return The `PANIC` timelock expiry date/time
     uint40 public timeToCalm;
     
-    /// @return The Funding/Redeeming timelock expiry date/time
-    uint40 public timeLock;
-    
     /// @return The Address of the current elected trustee
     address public trustee;
 
@@ -110,10 +107,10 @@ contract BaktInterface
     /// @return Total count of tokens
     uint public totalSupply;
     
-    /// @return The price of the last token sale
+    /// @return The price at which to purchase tokens
     uint public tokenPrice = 1000000000000;
 
-    /// @return The combined balance of ether commited to holder accounts, 
+    /// @return The combined balance of ether committed to holder accounts, 
     /// unclaimed dividends and values in pending transactions.
     uint public committedEther;
 
@@ -176,7 +173,7 @@ contract BaktInterface
     // Triggered when tokens are created during a funding round
     event TokensCreated(address indexed holder, uint amount);
     
-    // Triggered whe tokes are destroyed during a redeeming round
+    // Triggered when tokes are destroyed during a redeeming round
     event TokensDestroyed(address indexed holder, uint amount);
     
     // Triggered when a hold causes a panic
@@ -198,7 +195,7 @@ contract BaktInterface
     ///    - committed ether is 0
     function destroy();
 
-    /// @return The balance of uncommited ether funds.
+    /// @return The balance of uncommitted ether funds.
     function fundBalance() constant returns (uint);
 
 //
@@ -223,7 +220,7 @@ contract BaktInterface
     /// @return success state
     /// @dev `_from` and `_to` must be an existing holders
     function transferFrom(address _from, address _to, uint256 _amount)
-        public returns (bool);
+        returns (bool);
 
     /// @notice Approve `_spender` to transfer `_amount` of tokens
     /// @param _spender the approved spender address. Does not have to be an
@@ -320,12 +317,6 @@ contract BaktInterface
     /// @dev ether = `_amount` * `fundBalance()` / `totalSupply`
     /// @return success state
     function redeem(uint _amount) returns (bool);
-
-    /// @notice Closes a funding round after the alotted time
-    // function closeFunding() returns (bool);
-
-    /// @notice Closes a redeem round after the alotted time
-    // function closeRedeem() returns (bool);
 
 //
 // Dividend Functions
@@ -524,6 +515,27 @@ contract Bakt is BaktInterface
         Calm();
     }
 
+    // Queues a pending transaction 
+    function timeLockSend(address _from, address _to, uint _value, bytes _data)
+        internal
+        returns (uint8)
+    {
+        // Check that queue is not full
+        require(ptxHead + 1 != ptxTail);
+
+        TX memory tx = TX({
+            from: _from,
+            to: _to,
+            value: _value,
+            data: _data,
+            blocked: false,
+            timeLock: uint40(now + TXDELAY)
+        });
+        TransactionPending(ptxHead, _from, _to, _value, now + TXDELAY);
+        pendingTxs[ptxHead++] = tx;
+        return  ptxHead - 1;
+    }
+
     // Execute the first TX in the pendingTxs queue. Values will
     // revert if the transaction is blocked or fails.
     function sendPending()
@@ -576,27 +588,6 @@ contract Bakt is BaktInterface
         
         pendingTxs[_txIdx].blocked = true;
         TransactionBlocked(msg.sender, _txIdx);
-    }
-    
-    // Queues a pending transaction 
-    function timeLockSend(address _from, address _to, uint _value, bytes _data)
-        internal
-        returns (uint8)
-    {
-        // Check that queue is not full
-        require(ptxHead + 1 != ptxTail);
-
-        TX memory tx = TX({
-            from: _from,
-            to: _to,
-            value: _value,
-            data: _data,
-            blocked: false,
-            timeLock: uint40(now + TXDELAY)
-        });
-        TransactionPending(ptxHead, _from, _to, _value, now + TXDELAY);
-        pendingTxs[ptxHead++] = tx;
-        return  ptxHead - 1;
     }
     
 //
@@ -1048,8 +1039,9 @@ contract Bakt_Factory
 /* Events */
 
     event Created(address _creator, bytes32 _regName, address _address);
+    event Withdraw(uint amount);
 
-/* Constructor */
+/* Constructor Destructor*/
 
     function Bakt_Factory(address _creator, bytes32 _regName, address _owner)
     {
@@ -1057,13 +1049,26 @@ contract Bakt_Factory
                 _creator != 0x0 ? _creator : msg.sender;
     }
 
-/* Public FUnctions */
+    function destroy()
+    {
+        require(msg.sender == owner);
+        selfdestruct(msg.sender);
+    }
+    
+/* Public Functions */
 
     // Sets product creation fee
     function setFee(uint _fee)
     {
         require(msg.sender == owner);
         fee = _fee;
+    }
+    
+    function withdraw()
+    {
+        Withdraw(this.balance);
+        owner.transfer(this.balance);
+        
     }
 
     function createNew(bytes32 _regName, address _owner)

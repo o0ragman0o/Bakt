@@ -1,0 +1,204 @@
+/* CSS declarations go here */
+
+div {
+	display: block;
+	padding: 2px;
+	font-size: 16px;
+}
+
+div.left{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;	
+}
+
+div.center{
+	display: flex;
+	flex-direction: column;
+	align-items: center;	
+}
+div.right{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;	
+}
+
+div.foot{
+	background-color: #eef;
+	border-radius: 6px 6px 0 0;
+	padding: 6px;
+}
+
+div.tx{
+	border-radius: 6px;
+	padding: 6px;	
+	margin: 3px;
+}
+
+label {
+	display: inline-block;
+	text-transform: uppercase;
+	width: 130px;
+}
+
+button {
+	border: 1px solid;
+	border-color: #ddf;
+	border-radius: 3px;
+}
+button:hover {
+	/*border-bottom: 1px;*/
+	background-color: #eef;
+}
+
+ul {
+	list-style: none;
+    padding-left:0;
+}
+
+/*.show {
+	display: inline;
+}
+*/
+.hide {
+	/*visibility:hidden;*/
+	display: none;		
+}
+
+.value {
+	display: inline-block;
+	text-transform: uppercase;
+	width: 130px;
+}
+
+.bakt-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 5px;
+	margin: 5px;
+}
+
+.panel:before {
+	filter: blur(3px);
+}
+
+.panel {
+   display: -webkit-flex;
+   display: flex;
+   -webkit-align-items: center;
+   align-items: center;
+   -webkit-justify-content: center;
+   justify-content: center;
+   -webkit-flex-flow: column wrap;
+   flex-flow: column wrap;
+   -webkit-align-content: stretch;
+   align-content: stretch;
+
+	padding: 3px;
+	margin: 3px;
+    box-shadow: 2px 2px 5px #888888;
+    border-radius: 6px;
+	width: 600px;
+	background-color: rgba(255,255,255,0.9);
+}
+
+
+.panel_h {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 5px;
+	margin: 5px;
+    box-shadow: 2px 2px 5px #888888;
+    border-radius: 3;
+	width: 600px;
+
+}
+
+.panicked {
+	background-image: url("Panicked.svg");
+	background-repeat: repeat;
+}
+
+.normal {
+	background-color: #aaa;
+	background: url(Normal.svg);
+}
+
+.cleared {
+	background-color: #afa;
+
+}
+
+.waiting {
+	background-color: #fd7;
+
+}
+
+.blocked {
+	background-color: #faa;
+}
+
+
+.sk-cube-grid {
+  width: 40px;
+  height: 40px;
+  margin: 100px auto;
+}
+
+.sk-cube-grid .sk-cube {
+  width: 33%;
+  height: 33%;
+  background-color: #333;
+  float: left;
+  -webkit-animation: sk-cubeGridScaleDelay 1.3s infinite ease-in-out;
+          animation: sk-cubeGridScaleDelay 1.3s infinite ease-in-out; 
+}
+.sk-cube-grid .sk-cube1 {
+  -webkit-animation-delay: 0.2s;
+          animation-delay: 0.2s; }
+.sk-cube-grid .sk-cube2 {
+  -webkit-animation-delay: 0.3s;
+          animation-delay: 0.3s; }
+.sk-cube-grid .sk-cube3 {
+  -webkit-animation-delay: 0.4s;
+          animation-delay: 0.4s; }
+.sk-cube-grid .sk-cube4 {
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s; }
+.sk-cube-grid .sk-cube5 {
+  -webkit-animation-delay: 0.2s;
+          animation-delay: 0.2s; }
+.sk-cube-grid .sk-cube6 {
+  -webkit-animation-delay: 0.3s;
+          animation-delay: 0.3s; }
+.sk-cube-grid .sk-cube7 {
+  -webkit-animation-delay: 0s;
+          animation-delay: 0s; }
+.sk-cube-grid .sk-cube8 {
+  -webkit-animation-delay: 0.1s;
+          animation-delay: 0.1s; }
+.sk-cube-grid .sk-cube9 {
+  -webkit-animation-delay: 0.2s;
+          animation-delay: 0.2s; }
+
+@-webkit-keyframes sk-cubeGridScaleDelay {
+  0%, 70%, 100% {
+    -webkit-transform: scale3D(1, 1, 1);
+            transform: scale3D(1, 1, 1);
+  } 35% {
+    -webkit-transform: scale3D(0, 0, 1);
+            transform: scale3D(0, 0, 1); 
+  }
+}
+
+@keyframes sk-cubeGridScaleDelay {
+  0%, 70%, 100% {
+    -webkit-transform: scale3D(1, 1, 1);
+            transform: scale3D(1, 1, 1);
+  } 35% {
+    -webkit-transform: scale3D(0, 0, 1);
+            transform: scale3D(0, 0, 1);
+  } 
+}
