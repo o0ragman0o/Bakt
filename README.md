@@ -114,9 +114,9 @@ Destroy the contract and transfer remaining ether to the trustee address on the 
 * all tokens have been destroyed
 * committed ether is 0
 ### _init
-'''
+```
 function _init(uint40 _panicDelayInSeconds, uint40 _pendingDelayInSeconds) returns (bool);
-'''
+```
 WARNING This action is one off and is irrevocable! 
 This will set the OTP (One Time Programable) panic and pending periods. Holders *cannot* be added
 until this function has been called.
