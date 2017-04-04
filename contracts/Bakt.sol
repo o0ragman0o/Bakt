@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.2.0
-updated:27-March-2017
+ver:    0.2.1
+updated:29-March-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -19,6 +19,7 @@ Trustee from among the holders.
 
 The Trustee has unilateral powers to:
     - remove funds
+    - use the contract to execute code on another contract
     - set the token price
     - pay dividends
     - add holders
@@ -28,18 +29,24 @@ Holders have the power to:
     - vote for a preferred Trustee
     - veto a transaction
     - purchase tokens with ether at the token price.
-    - redeem tokens for ether at a price proportional to the fund.
-    - withdraw their balance of ether
+    - redeem tokens for ether at the token price or a price proportional to
+      the fund.
+    - withdraw their balance of ether.
+    - Cause a panic state in the contract
 
 This contract uses integer tokens so ERC20 `decimalPlaces` is 0.
 
 Maximum number of holders is limited to 254 to prevent potential OOG loops
 during elections.
-Perpetual election for the `Trustee` run in O(254) time to discover a winner.
+Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 
 */
 
+import "https://github.com/o0ragman0o/SandalStraps/contracts/RegBase.sol";
+import "https://github.com/o0ragman0o/SandalStraps/contracts/Factory.sol";
+
 pragma solidity ^0.4.10;
+
 
 contract BaktInterface
 {
@@ -74,18 +81,25 @@ contract BaktInterface
 /* Constants */
 
     uint8 public constant decimalPlaces = 0;
-//TODO change minutes to days before final deploy
-    uint40 constant PANICPERIOD = 2 minutes;
-    uint40 constant TXDELAY = 1 minutes;
     uint constant MINGAS = 10000;
     string public constant name = "Bakt";
     string public constant symbol = "";
 
 /* State Valiables */
 
+    // Blows once _init() is called to prevent further changes to panic and
+    // pending timeLocks
+    bool public __initFuse = true;
+
     // A mutex used for reentry protection
     bool __reMutex;
 
+    // The period for which a panic will prevent functionality to the contract
+    uint40 PANICPERIOD;
+    
+    // The period for which a pending transaction must wait before being sent 
+    uint40 TXDELAY;
+    
     /// @return The Panic flag state. false == calm, true == panicked
     bool public panicked;
     
@@ -101,9 +115,6 @@ contract BaktInterface
     /// @return The Address of the current elected trustee
     address public trustee;
 
-    /// @return Contract name given at construction
-    bytes32 public regName;
-    
     /// @return Total count of tokens
     uint public totalSupply;
     
@@ -113,6 +124,14 @@ contract BaktInterface
     /// @return The combined balance of ether committed to holder accounts, 
     /// unclaimed dividends and values in pending transactions.
     uint public committedEther;
+
+    // `regName` A static identifier, set in the constructor and used by
+    // registrars
+    bytes32 public regName;
+
+    // `resource` A informational resource. Can be a sha3 of a string to lookup
+    // in a StringsMap
+    bytes32 public resource;
 
     /// @param address The address of a holder.
     /// @return Holder data cast from struct Holder to an array
@@ -189,11 +208,12 @@ contract BaktInterface
     /// @dev Accept payment to the default function
     function() payable;
 
-    /// @notice Destroy the contract
-    /// @dev Can be selfdestructed on the conditions that:
-    ///    - all tokens have been destroyed
-    ///    - committed ether is 0
-    function destroy();
+    /// @notice This will set the panic and pending periods.
+    /// This action is a one off and is irrevocable! 
+    /// @param _panicDelayInSeconds The panic delay period in seconds
+    /// @param _pendingDelayInSeconds The pending period in seconds
+    function _init(uint40 _panicDelayInSeconds, uint40 _pendingDelayInSeconds)
+        returns (bool);
 
     /// @return The balance of uncommitted ether funds.
     function fundBalance() constant returns (uint);
@@ -349,7 +369,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes10 constant public version = "Bakt 0.2.0";
+    bytes10 constant public version = "Bakt 0.2.1";
 
 //
 // Bakt Functions
@@ -384,6 +404,20 @@ contract Bakt is BaktInterface
         selfdestruct(msg.sender);
     }
     
+    // One Time Programable shot to set the panic and pending periods.
+    // 86400 == 1 day
+    function _init(uint40 _panicPeriodInSeconds,
+        uint40 _pendingPeriodInSeconds)
+        onlyTrustee
+        returns (bool)
+    {
+        require(__initFuse);
+        PANICPERIOD = _panicPeriodInSeconds;
+        TXDELAY = _pendingPeriodInSeconds;
+        delete __initFuse;
+        return true;
+    }
+
     // Returns calculated fund balance
     function fundBalance()
         public
@@ -391,6 +425,13 @@ contract Bakt is BaktInterface
         returns (uint)
     {
         return this.balance - committedEther;
+    }
+
+    function changeResource(bytes32 _resource)
+        public
+        onlyTrustee
+    {
+        resource = _resource;
     }
 
 //
@@ -459,7 +500,6 @@ contract Bakt is BaktInterface
     // Processes token transfers and subsequent change in voting power
     function xfer(Holder storage _from, Holder storage _to, uint _amount)
         internal
-        // inState(NORMAL)
         returns (bool)
     {
         uint __check;
@@ -643,6 +683,7 @@ contract Bakt is BaktInterface
         onlyTrustee
         returns (bool)
     {
+        require(!__initFuse);
         // limit the number of additions to 20 to prevent OOG
         require(_addrs.length < 21);
         
@@ -802,11 +843,11 @@ contract Bakt is BaktInterface
 
         revoke(holder);
 
-// TODO test for truncation/remainder cases on redeem price equasion
         price = fundBalance() / totalSupply;
         // prevent redeeming above token price which would allow a recyclic 
         // arbitrage attack (buy back in at a lower price and redeem again)
         price = price < tokenPrice ? price : tokenPrice;
+        require(price > 0);
         eth = _amount * price;
         
         // uint eth = _amount * fundBalance() / totalSupply;
@@ -883,7 +924,6 @@ contract Bakt is BaktInterface
         __check = _holder.etherBalance;
             _holder.etherBalance += owed;
         assert(_holder.etherBalance >= __check);
-        // __Log(upto, "upto");
         return dividendsTable.length == upto;
     }
 
@@ -917,6 +957,7 @@ contract Bakt is BaktInterface
         internal
     {
         uint __check;
+        if(_value > 0) require(totalSupply > 0);
 
         dividendsTable.push(Dividend({dividend: _value, supply: totalSupply}));
         
@@ -994,7 +1035,7 @@ contract Bakt is BaktInterface
 
     // Blocks if reentry mutex or panicked is true or sets rentry mutex to true
     modifier preventReentry() {
-        require(!(__reMutex || panicked));
+        require(!(__reMutex || panicked || __initFuse));
         __reMutex = true;
         _;
         __reMutex = false;
@@ -1003,7 +1044,7 @@ contract Bakt is BaktInterface
 
     // Blocks if reentry mutex or panicked is true
     modifier canEnter() {
-        require(!(__reMutex || panicked));
+        require(!(__reMutex || panicked || __initFuse));
         _;
     }
         
@@ -1022,59 +1063,30 @@ contract Bakt is BaktInterface
 
 
 // SandalStraps compliant factory for Bakt
-contract Bakt_Factory
+contract BaktFactory is Factory
 {
     
 /* Constants */
 
-    bytes32 constant public regName = "Bakt_Factory";
-    bytes32 constant public VERSION = "Bakt_Factory v0.2.0";
+    bytes32 constant public regName = "Bakts";
+    bytes32 constant public VERSION = "Bakt_Factory v0.2.1";
     
-/* State Variables */
-
-    address public owner;
-    uint public fee;
-    address public last;
-
-/* Events */
-
-    event Created(address _creator, bytes32 _regName, address _address);
-    event Withdraw(uint amount);
 
 /* Constructor Destructor*/
 
-    function Bakt_Factory(address _creator, bytes32 _regName, address _owner)
+    function BaktFactory(address _creator, bytes32 _regName, address _owner)
+        Factory(_creator, _regName, _owner)
     {
-        owner = _owner != 0x0 ? _owner : 
-                _creator != 0x0 ? _creator : msg.sender;
+        // nothing to contruct
     }
 
-    function destroy()
-    {
-        require(msg.sender == owner);
-        selfdestruct(msg.sender);
-    }
-    
 /* Public Functions */
 
-    // Sets product creation fee
-    function setFee(uint _fee)
-    {
-        require(msg.sender == owner);
-        fee = _fee;
-    }
-    
-    function withdraw()
-    {
-        Withdraw(this.balance);
-        owner.transfer(this.balance);
-        
-    }
 
     function createNew(bytes32 _regName, address _owner)
         payable
+        feePaid
     {
-        require(msg.value == fee || msg.sender == owner);
         last = new Bakt(owner, _regName, msg.sender);
         Created(msg.sender, _regName, last);
     }

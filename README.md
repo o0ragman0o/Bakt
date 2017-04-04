@@ -1,35 +1,35 @@
 # BAKT
-## Exclusive Share Holder Fund Contract
+## Exclusive Token Holder Fund Contract
 
 **Bakt** is a *payable* and *dividends paying* Ethereum contract in which token holders elect a single holder as *Trustee* to manage the fund.  It may be suitable for private investor groups of up to 255 members who have *pre-established trust arrangements*.
 
 ## Bakt:
-* Holds a fund of *Ether*
-* Can accept payments to its default function
-* Maintains a balance of committed and uncommitted *ether*
-* Records *Holders'* proportional investments in the form of transferable ERC20 *tokens*
-* Allows *token* transfer only to another registered *Holder*
-* Records *Holders'* balance of *ether*
-* Creates new *tokens* upon a *Holder purchasing* with *ether*
-* Destroys token upon a *Holder redeeming* tokens for *ether* proportional to their share of the fund upto the *token price*
-* Allows continuous *Purchasing* and *Redeeming*
+* Holds a fund of *Ether*.
+* Can accept payments to its default function.
+* Maintains a balance of committed and uncommitted *ether*.
+* Records *Holders'* proportional investments in the form of transferable ERC20 *tokens*.
+* Allows *token* transfer only to another registered *Holder*.
+* Records *Holders'* balance of *ether*.
+* Creates new *tokens* upon a *Holder purchasing* with *ether*.
+* Destroys *tokens* upon a *Holder redeeming tokens* for *ether* proportional to their share of the fund upto the *token price*.
+* Allows continuous *Purchasing* and *Redeeming*.
 * Allows *Holders* to *vote* for a *Trustee* in proportion to their holdings.
-* Allows the *Trustee* to add new holders
-* Allows the *Trustee* to pay dividends to the *Holder* 
+* Allows the *Trustee* to add new holders.
+* Allows the *Trustee* to pay dividends to the *Holder*.
 * Allows the *Trustee* to unilaterally order the withdrawal of uncommitted funds.
-* Allows *Holders* to order the withdrawal of their balance of *ether*
-* Prevents *pending transactions* from being sent for 1 day
-* Allows any holder to *block* a *pending transaction*
-* Allows any holder to execute a transaction past its pending timestamp
-* Allows any holder to cause a **panic**
+* Allows *Holders* to order the withdrawal of their balance of *ether*.
+* Prevents *pending transactions* from being sent for 1 day.
+* Allows any holder to *block* a *pending transaction*.
+* Allows any holder to execute a transaction past its pending timestamp.
+* Allows any holder to cause a **panic**.
 * Prevents all actions during a panic except for *voting*, *blocking*, receiving payments and *calming*.
-* Allows any holder to *calm* after an elapsed period of two(2) days after a *panic*.
+* Allows any holder to *calm* after an elapsed period after a *panic*.
 
 ## Architecture
 ### Governance Model
-The primary requirement of this contract is to provide a perpetual and liquid mechanism to elect a trustee of the fund.  Given that a vote count must be conducted across the entire membership of holders in O(N) time after every change to a single holder's preference or balance of tokens, a necessary bounding limit upon holder numbers is required to prevent Out Of Gas errors.  This has been set at 255 and so forces the election loop to O(255) time regardless of the actual number of Holders registered.
+A primary requirement of this contract is to provide a perpetual and liquid mechanism to elect a trustee of the fund.  This requires a vote count across the entire membership of holders in O(N) time after every change to a single holder's voting preference or balance of tokens. A necessary bounding limit upon holder numbers is required to prevent Out Of Gas errors.  This has been set at 255 and so forces the election loop to O(255) time regardless of the actual number of Holders registered.
 
-This limit impacts upon the freedom to transfer tokens and limits the recipients of such transfers to registered holder only.  It is this behaviour which limits the usage to private organisations with limited numbers.
+This limit impacts upon the freedom to transfer tokens by limiting the recipients to registered holders only.  It is this property which renders the contract `exclusive`.
 
 Holders are explicitly added to the contract by the Trustee and a new holder's voting preference defaults to the current Trustee until they explicitly change it by calling `vote()`.
 
@@ -38,50 +38,56 @@ The token model used is a variable supply in which tokens are created upon `purc
 
 A `purchase()` creates tokens to the value of:
 ```
-tokenPrice * (msg.value + etherBalanceOf(msg.sender))
+balanceOf[holder] += tokenPrice * (msg.value + etherBalanceOf[holder])
 ```
-with any fractional remainder of token price being deposited in the holders `etherBalance`.
+with any fractional remainder of token price of the ether sent being deposited in the holder's `etherBalance`.
+```
+etherBalanceOf[holder] = holder.etherBalance + msg.value - tokens * tokenPrice;
+```
 
-A `redeem(amount)` destroys the `amount` of tokens and commits a value of ether to the holder's `etherBalance` being the lesser of:
+A `redeem(amount)` destroys the `amount` of tokens and commits a value of ether to the holder's `etherBalance` being the *lesser* of:
 ```
-fundBalance * balanceOf(holder) / totalSupply
+etherBalanceOf[holder] += fundBalance * balanceOf[holder] / totalSupply
 or
-amount * tokenPrice
+etherBalanceOf[holder] += amount * tokenPrice
 ```
 ### Fund Model
-The contract manages its balance of ether in a number of sub-balances which it tracks through a the metric `committedEther` which is subtracted from the contract balance to derive `fundBalance()`:
+The contract manages its balance of *ether* in a number of sub-balances which it tracks through a the metric `committedEther`. `committedEther` is subtracted from the contract balance to derive `fundBalance()`:
 ```
 fundBalance = this.balance - committedEther;
 ```
-The Trustee has full use of the `fundBalance` and may order it's withdrawal at any time or commit an amount of it to dividends.
+The Trustee has access to the `fundBalance` and may order its withdrawal at any time or commit an amount of it as dividends payments.
 
 `committedEther` is the total ether held in all holder `etherBalance`'s, pending transactions and unclaimed dividends.
 ```
-committedEther = etherBalances[1..255] + unclaimed dividends + pending transactions
+committedEther = etherBalances[1..255] + unclaimed dividends[1..255] + pending transactions[0..255]
 ``` 
-A holder can order the withdrawal of their `etherBalance` at any time.
+A holder can order the withdrawal of their `etherBalance` at any time by calling `withdraw(uint)`.
+
+Ether can leave the contract only through a call to `sendPending()`.
 
 ### Security Model
-Given the potential for the trustee to unilaterally steal the `fundBalance`, a time delay of 1 day has been set for `withdraw()` (by holders) and `execute()` (by the trustee).  During this period, any holder can inspect the transaction and unilaterally block it.
+Given the potential for the trustee to unilaterally steal the `fundBalance`, a time delay for pending transactions must be set upon initialising the contract. Transactions initiated by `withdraw()` (by holders) and `execute()` (by the trustee) will be subject to this delay and open for inspection and blocking by other holders.
 
-A followup call to `sendPending()` will execute the oldest transaction in the pending queue if its time lock has expired or revert the transaction if it was blocked.
+A followup call to `sendPending()` will execute the oldest transaction in the pending queue (a FIFO queue) if its time lock has expired or revert the transaction if it was blocked.
 
-An additional `PANIC()` mechanism can be enacted to block most state mutating functions of the contract for two(2) days with the exception of `vote()` `block()` and `PANIC()`. This should only be called if there is serious behavioural problems with the contract or the trustee.  Its intent is to allow time for the holders to be notified and vote for a different trustee.
+An additional `PANIC()` mechanism can be enacted to block most state mutating functions of the contract panic period set during initialisation. The exceptions are `vote()` `block()` and `PANIC()`. This should only be called if there is serious behavioural problems with the contract or the trustee.  It is intended to allow time for the holders to be notified and vote for a different trustee.
  
 ## Deployment
 
-Deployment is by way of calling the `createNew()` function of the pre-deployed Bakt factory contracts with the required fee `fee()` at addresses:
+Deployment is by way of calling the `createNew(_name, _owner)` function of the pre-deployed Bakt factory contract with the required fee `fee()` at addresses:
+```
 Live: 
 Ropsten:
-(NB, Ropsten contract has 1 minute delay for pending transactions and 2 minute delay for panic)
-	 
-The address of the new Bakt contract is accessed from the Event log or by calling the function `last()` of the factory contract.
+```	 
+The address of the new Bakt contract is accessed from the Event log or by calling the factory's function `last()`.
 
 ## Setup
 The Bakt contract can be operated from an Ethereum wallet such as *Parity* or *Mist* by selecting 
 `Watch Contracts`
  and filling in the details and ABI.
 
+The contract must be initialised by calling the function `_init(_panicPeriodISeconds, _pendingPeriodInSeconds)`.
 In a freshly created contract, the address of the creating account is the *Trustee* and can add new holders with a call to `addHolders([array of up to 20 addresses])`
 
 
@@ -99,7 +105,6 @@ A SandalStraps compliant constructor
 function() payable;
 ```
 Accepts payment to the default function
-
 ### destroy
 ```
 function destroy();
@@ -108,6 +113,15 @@ Destroy the contract and transfer remaining ether to the trustee address on the 
 
 * all tokens have been destroyed
 * committed ether is 0
+### _init
+'''
+function _init(uint40 _panicDelayInSeconds, uint40 _pendingDelayInSeconds) returns (bool);
+'''
+WARNING This action is one off and is irrevocable! 
+This will set the OTP (One Time Programable) panic and pending periods. Holders *cannot* be added
+until this function has been called.
+`_panicDelayInSeconds` The panic delay period in seconds. (1 day == 86400 seconds) 
+`_pendingDelayInSeconds` The pending period in seconds.
 ### fundBalance
 ```
 function fundBalance() constant returns (uint);
@@ -161,9 +175,8 @@ Return the pending transaction index of the youngest pending transaction
 function ptxTail();
 ```
 Returns the pending transaction index of the oldest pending transaction
-### ERC20 Functions
-
-### totalSupply    
+## ERC20 Functions
+### totalSupply
 ```
 function totalSupply();
 ```
@@ -181,7 +194,6 @@ function transfer(address _to, uint _amount) returns (bool);
 ```
 `_to` the address of a Holder to transfer token to
 `_amount` Amount of tokens to transfer
-
 ### transferFrom
 ```
 function transferFrom(address _from, address _to, uint256 _amount) returns (bool);
@@ -220,7 +232,7 @@ Allows a Holder to release the contract from a Panicked state after the panic pe
 function panicked();
 ```
 Returns the Panic flag state. false == calm, true == panicked
-### timeToCalm    
+### timeToCalm
 ```
 function timeToCalm();
 ```
