@@ -1,3 +1,25 @@
+<Template name="ChangeBakt">
+	<h3>Bakt Address</h3>
+	<form>
+		{{> dapp_addressInput name="allow" value=address class="dapp-medium"}}
+		<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Init">
+	<h3>Initialize Bakt</h3>
+	Attention: This Bakt is not initialized<br>
+	Please enter the time in seconds for the transaction pending and panic periods (1 day == 86400 seconds)<br>
+	<strong>This action can only be done once!</strong><br>
+	<form>
+		<label>Tansaction Pending Period</label>
+		<input name="pending" type="number">
+		<label>Panic Period</label>
+		<input name="panic" type="number">
+		<input type="submit">
+	</form>
+</Template>
+
 <Template name="ChangeHolder">
 	<h3>Select Holder Account</h3>
 		{{> dapp_selectAccount accounts=accounts}}
@@ -75,8 +97,8 @@
 
 <Template name="Redeem">
 	<h3>Redeem Tokens</h3>
-	<form oninput="total.value=parseInt(rAmount.value) * {{dapp_formatBalance rPrice "0,0.00[0000]" "ether"}}">
-		<div>At {{dapp_formatBalance rPrice "0,0.00[0000]" "ether"}} ether/token</div>
+	<form oninput="total.value=parseInt(rAmount.value) * {{dapp_formatBalance rPrice "0,0.00[0000000]" "ether"}}">
+		<div>At {{dapp_formatBalance rPrice "0,0.00[0000000]" "ether"}} ether/token</div>
 		<label>Amount</label>
 		<input name="rAmount" type="number" minimum="0" maximum="{{tokenBalance}}" placeholder="{{tokenBalance}}"/>
 		<label for="total">Total</label>
@@ -107,6 +129,7 @@
 	<h3>Set Token Price</h3>
 	<form>
 		<label>Token Price</label>
+		The price cannot be lower than the previous price<br>
 		<input name="tokenPrice" type="number" minimum='{{dapp_formatBalance tokenPrice "0,0.00[0000]" "ether"}}' 
 			placeholder='{{dapp_formatBalance tokenPrice "0,0.00[0000]" "ether"}}' step="any"/>
 		<input type="submit" value="Ok" />
@@ -119,12 +142,22 @@
 		<label>Send To</label>
 		{{> dapp_addressInput class="dapp-medium"}}
 		<label>Value</label>
-		<input name="sendValue" type="number" step="all" />
-<!-- 		<label>Gas</label>
-		<input name="gas" type="number" value="90000"/>
- -->		<label>Data</label>
-		{{> dapp_dataTextarea cols="20" rows="4"}}
-		<input type="submit" value="Send">
+		<input name="sendValue" id="sendValue" type="number"
+			placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;' step="any"/>
+<!--  		<label>ABI</label>
+ 		<input name="abi" id="abi" type="text" />
+ 		<label>Function</label>
+ 		<select name="functName" id="functName" type="text">
+ 			{{#each funcs}}
+ 				<option value="{{this}}">{{this}}</option>
+ 			{{/each}}
+ 		</select>
+ 		<label>Arguments</label>
+ 		<input name="arguments" id="arguments" type="text" placeholder="arg1, arg2,..."/>
+ -->
+ 		<label>Call Data</label>
+ 		{{> dapp_dataTextarea cols="20" rows="4" value=callData}}
+ 		<input type="submit" value="Send">
 	</form>
 </Template>
 

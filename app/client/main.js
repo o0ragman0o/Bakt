@@ -18,9 +18,9 @@ handleError = function(e) {
 // baktAddr = "0x0580c4e173ffce2d6547c697399f1da9bac08fff";
 // baktAddr = "0x544aaef4577ac8fae471240de83497b1fb1a586b";
 // baktAddr = "0x4fc2eed0f68115079d29cbbe3c6f1c9bd6b51805";
-baktAddr = "0x76278fee9d8051311b9adf6f2b017cb802e34ec5";
-
-// currentBakt = new ReactiveVar();
+// baktAddr = "0x76278fee9d8051311b9adf6f2b017cb802e34ec5";
+baktAddr ="";
+// currentBakt = "";
 holder = new ReactiveVar();
 holderAddr = new ReactiveVar();
 holderAddr.set(EthAccounts.findOne().address);
@@ -28,6 +28,7 @@ holderAddr.set(EthAccounts.findOne().address);
 ethAccount = new ReactiveVar();
 
 baktDict = {
+	baktAddress: new ReactiveVar(),
 	panicked: new ReactiveVar(),
 	timeLock: new ReactiveVar(new BigNumber(0)),
 	timeToCalm: new ReactiveVar(new BigNumber(0)),
@@ -44,10 +45,8 @@ baktDict = {
 	pendingTXs: new ReactiveVar(),
 }
 
-
 update = function () {
 	baktDict.panicked.set(currentBakt.panicked());
-	baktDict.timeLock.set(currentBakt.timeLock());
 	baktDict.timeToCalm.set(currentBakt.timeToCalm());
 	baktDict.totalSupply.set(currentBakt.totalSupply());
 	baktDict.fundBalance.set(currentBakt.fundBalance());
@@ -95,14 +94,20 @@ update = function () {
 	);
 }
 
-if (baktAddr) {
-	currentBakt = baktContract.at(baktAddr);
-}
-
-web3.eth.filter().watch(function () {
-	update();
-});
-
 ethAccount.set(EthAccounts.findOne());
 
-update();
+// if (baktAddr != "") {
+// 	currentBakt = baktContract.at(baktAddr);
+// 	update()
+// } else {
+// 	EthElements.Modal.show({
+// 			template: 'ChangeBakt',
+// 	});
+// }
+
+web3.eth.filter().watch(function () {
+	// update();
+});
+
+
+// update();

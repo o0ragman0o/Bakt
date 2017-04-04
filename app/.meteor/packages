@@ -26,3 +26,4 @@ ethereum:blocks
 ethereum:accounts
 ethereum:web3
 tap:i18n
+kadira:flow-router

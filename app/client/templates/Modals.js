@@ -1,5 +1,32 @@
 import "./Modals.html";
 
+Template.ChangeBakt.events ({
+	'change .dapp-address-input input': function(e) {
+		TemplateVar.set("baktAddr", TemplateVar.getFrom(e.currentTarget, 'value'));
+	},
+	'submit form' (event, template) {
+		event.preventDefault();
+		var addr = TemplateVar.get("baktAddr");
+		if(addr === undefined) {
+			FlowRouter.go("/");
+			return;
+		}
+		FlowRouter.go("/" + addr);
+		// currentBakt = baktContract.at(baktDict.baktAddress.get());
+		// update();
+		modalcb();
+	}
+})
+
+Template.Init.events ({
+	'submit form' (event, template) {
+		var pending = event.target.children.pending.value;
+		var panic = event.target.children.panic.value;
+		console.log(pending,panic);
+		currentBakt.__init(pending, panic,{from:holderAddr.get(), gas:90000}, modalcb);
+	}
+})
+
 Template.ChangeHolder.helpers ({
 	accounts: function () {
 		return EthAccounts.findAll().fetch();
@@ -22,7 +49,7 @@ Template.PayInto.events({
 	'submit form' (event, template) {
 		event.preventDefault();
 		var value = new BigNumber(event.target.children.ethValue.value * 10**18);
-		web3.eth.sendTransaction({to:baktAddr, value: value, from:holderAddr.get()}, modalcb);
+		web3.eth.sendTransaction({to:baktDict.baktAddress.get(), value: value, from:holderAddr.get()}, modalcb);
 	}
 })
 
@@ -93,8 +120,8 @@ Template.Purchase.events({
 
 Template.Redeem.helpers({
 	rPrice: function () {
-		p = currentBakt.fundBalance().div(baktDict.totalSupply.get());
-		if (p.gt(baktDict.tokenPrice.get())) p = baktDict.tokenPrice.get();
+		p = currentBakt.fundBalance().div(currentBakt.totalSupply());
+		if (p.gt(currentBakt.tokenPrice())) p = currentBakt.tokenPrice();
 		return p;
 	},
 	tokenBalance: function () {
@@ -145,7 +172,7 @@ Template.SetPrice.helpers({
 Template.SetPrice.events({
 	'submit form' (e, template) {
 		e.preventDefault();
-		price = e.target.children.tokenPrice.value;
+		price = e.target.children.tokenPrice.value * 10**18;
 		console.log(price, holder);
 		currentBakt.setTokenPrice(price,{from:holderAddr.get()}, modalcb);		
 	}
@@ -157,6 +184,7 @@ Template.AddHolders.events({
 		t = e.target.children[0].children[0];
 		holder = t.value;
 		console.log(t.value, holder);
+
 		currentBakt.addHolders([holder],{from:holderAddr.get()}, modalcb);
 	}
 })
@@ -164,17 +192,51 @@ Template.AddHolders.events({
 Template.Execute.helpers({
 	fundBalance: function () {
 		return baktDict.fundBalance.get();
+	},
+	funcs: function () {
+		return TemplateVar.get("funcs");
+	},
+	callData: function () {
+		return TemplateVar.get("callData");
 	}
 })
 
 Template.Execute.events({
+	// 'input #to' (e, template) {
+	'change .dapp-address-input input': function(e) {
+		TemplateVar.set("to", TemplateVar.getFrom(e.currentTarget, 'value'));
+	},
+	'input #sendValue' (e, template) {
+		TemplateVar.set("sendValue", e.target.value * 10**18);
+	},
+	'input #abi' (e, template) {
+
+		abi = JSON.parse(e.target.value);
+		arr = [];
+		abi.forEach(function(json) {
+			if(json.type === "function" && !json.constant) arr.push(json.name);
+			}
+		);
+		TemplateVar.set("abi", e.target.value);
+		TemplateVar.set("toK", web3.eth.contract(abi).at(TemplateVar.get("to")));
+		TemplateVar.set("funcs", arr);
+	},
+	'change #functName' (e, template) {
+		TemplateVar.set("functName", e.target.value);
+		TemplateVar.set("callData", TemplateVar.get("toK")[TemplateVar.get("functName")].getData(TemplateVar.get("arguments")));
+		console.log(TemplateVar.get("functName"));
+	},
+	'input #arguments' (e, trmplate) {
+		TemplateVar.set("arguments", e.target.value);
+		TemplateVar.set("callData", TemplateVar.get("toK")[TemplateVar.get("functName")].getData(TemplateVar.get("arguments")));
+	},
 	'submit form' (e, template) {
 		e.preventDefault();		
-		to = e.target.children[1].children[0].value;
-		sendValue = e.target.children.sendValue.value * 10**18;
-		data = e.target.children[5].value;
-		console.log(to, sendValue, data);
-		currentBakt.execute(to, sendValue, data,{from:holderAddr.get(), gas:300000}, modalcb);
+		currentBakt.execute(
+			TemplateVar.get("to"),
+			TemplateVar.get("sendValue"),
+			TemplateVar.get("callData") || "",
+			{from:holderAddr.get(), gas:300000}, modalcb);
 	}
 
 })
