@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.2.1
-updated:29-March-2017
+ver:    0.2.3_tc_alpha
+updated:12-April-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -42,7 +42,6 @@ Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 
 */
 
-import "https://github.com/o0ragman0o/SandalStraps/contracts/RegBase.sol";
 import "https://github.com/o0ragman0o/SandalStraps/contracts/Factory.sol";
 
 pragma solidity ^0.4.10;
@@ -80,19 +79,19 @@ contract BaktInterface
 
 /* Constants */
 
-    uint8 public constant decimalPlaces = 0;
     uint constant MINGAS = 10000;
-    string public constant name = "Bakt";
-    string public constant symbol = "";
 
 /* State Valiables */
+
+    // A mutex used for reentry protection
+    bool __reMutex;
 
     // Blows once _init() is called to prevent further changes to panic and
     // pending timeLocks
     bool public __initFuse = true;
 
-    // A mutex used for reentry protection
-    bool __reMutex;
+    // Allows the contract to accept or deny payments
+    bool public acceptingPayments;
 
     // The period for which a panic will prevent functionality to the contract
     uint40 PANICPERIOD;
@@ -369,7 +368,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes10 constant public version = "Bakt 0.2.1";
+    bytes32 constant public VERSION = "Bakt 0.2.3_tc_alpha";
 
 //
 // Bakt Functions
@@ -388,7 +387,7 @@ contract Bakt is BaktInterface
     function() 
         payable
     {
-        require(msg.value > 0);
+        require(msg.value > 0 && acceptingPayments);
         Deposit(msg.sender, msg.value);
     }
     
@@ -414,6 +413,7 @@ contract Bakt is BaktInterface
         require(__initFuse);
         PANICPERIOD = _panicPeriodInSeconds;
         TXDELAY = _pendingPeriodInSeconds;
+        acceptingPayments = true;
         delete __initFuse;
         return true;
     }
@@ -716,6 +716,14 @@ contract Bakt is BaktInterface
         holderIndex[holders[_addr].id] = _addr;
         NewHolder(_addr);
     }
+    
+    function acceptPayments(bool _accepting)
+        public
+        canEnter
+        onlyTrustee
+    {
+        acceptingPayments = _accepting;
+    }
 
 //
 // Holder Functions
@@ -939,11 +947,12 @@ contract Bakt is BaktInterface
         uint upto = dividendsTable.length;
         uint tokens = _holder.tokenBalance;
         at_ = _holder.lastClaimed;
+        Dividend memory dvnd;
 
         while (at_ < upto && msg.gas > MINGAS) {
-            if (0 != dividendsTable[at_].supply)
-                owed_ += (dividendsTable[at_].dividend * tokens) / 
-                    dividendsTable[at_].supply;
+            dvnd = dividendsTable[at_];
+            if (0 != dvnd.supply)
+                owed_ += (dvnd.dividend * tokens) / dvnd.supply;
             at_++;
         }
         return;
@@ -996,6 +1005,7 @@ contract Bakt is BaktInterface
     {
         uint max;
         uint winner;
+        uint votes;
         uint8 i;
         address addr;
 
@@ -1004,9 +1014,12 @@ contract Bakt is BaktInterface
         while(++i != 0)
         {
             addr = holderIndex[i];
-            if (addr != 0x0 && holders[addr].votes > max) {
-                max = holders[addr].votes;
-                winner = i;
+            if (addr != 0x0) {
+                votes = holders[addr].votes;
+                if (votes > max) {
+                    max = votes;
+                    winner = i;
+                }
             }
         }
         trustee = holderIndex[winner];
@@ -1018,7 +1031,9 @@ contract Bakt is BaktInterface
     function revoke(Holder _holder)
         internal
     {
-        holders[_holder.votingFor].votes -= _holder.tokenBalance;
+        uint __check = holders[_holder.votingFor].votes;
+            holders[_holder.votingFor].votes -= _holder.tokenBalance;
+        assert(holders[_holder.votingFor].votes <= __check);
     }
     
     // Places votes with preferred candidate
@@ -1026,7 +1041,9 @@ contract Bakt is BaktInterface
     function revote(Holder _holder)
         internal
     {
-        holders[_holder.votingFor].votes += _holder.tokenBalance;
+        uint __check = holders[_holder.votingFor].votes;
+            holders[_holder.votingFor].votes += _holder.tokenBalance;
+        assert(holders[_holder.votingFor].votes >= __check);
     }
     
 //
@@ -1066,10 +1083,13 @@ contract Bakt is BaktInterface
 contract BaktFactory is Factory
 {
     
+    // Live:
+    // Ropsten: 0x8FcE7Eae3A1367bCf7FdBfbb0BEf919DC8d92D80
+    
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.2.1";
+    bytes32 constant public VERSION = "Bakt_Factory v0.2.3_tc_alpha";
     
 
 /* Constructor Destructor*/
@@ -1077,7 +1097,7 @@ contract BaktFactory is Factory
     function BaktFactory(address _creator, bytes32 _regName, address _owner)
         Factory(_creator, _regName, _owner)
     {
-        // nothing to contruct
+        // nothing to construct
     }
 
 /* Public Functions */
