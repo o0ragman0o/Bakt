@@ -23,19 +23,7 @@
 <Template name="ChangeHolder">
 	<h3>Select Holder Account</h3>
 		{{> dapp_selectAccount accounts=accounts}}
-<!-- 	<ul>
-	{{#each accounts}}
-		<li>
-		{{> dapp_selectAccount accounts=accounts}}
-
-		<button>
-		{{this.name}}
-		{{> dapp_identicon identity=this.address class="dapp-small"}}{{this.address}}
-		</button>
-		</li>
-	{{/each}}
-	</ul>
- --></Template>
+</Template>
 
 <Template name="PayInto">
 	<h3>Pay Into Contract</h3>
@@ -63,8 +51,13 @@
 	Transfer tokens to another holder.
 	<form>
 		<label>To</label>
-		{{> dapp_addressInput id="to" value=address class="dapp-medium"}}	
-
+		<select name="addr">
+			{{#each addrList}}
+				<option value="{{this}}">
+					{{> dapp_identicon identity=this class="dapp-small"}}{{this}}
+				</option>
+			{{/each}}
+		</select>
 		<label>Amount</label>
 		<input id="amount" placeholder="{{tokenBalance}}"/>
 		<input type="submit" />
@@ -117,8 +110,8 @@
 	</form>
 </Template>
 
-<Template name="AddHolders">
-	<h3>Add Holders</h3>
+<Template name="AddHolder">
+	<h3>Add Holder</h3>
 	<form>
 	{{> dapp_addressInput value=holderAddr class="dapp-medium"}}
 	<input type="submit" />
@@ -144,36 +137,30 @@
 		<label>Value</label>
 		<input name="sendValue" id="sendValue" type="number"
 			placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;' step="any"/>
-<!--  		<label>ABI</label>
- 		<input name="abi" id="abi" type="text" />
- 		<label>Function</label>
- 		<select name="functName" id="functName" type="text">
- 			{{#each funcs}}
- 				<option value="{{this}}">{{this}}</option>
- 			{{/each}}
- 		</select>
- 		<label>Arguments</label>
- 		<input name="arguments" id="arguments" type="text" placeholder="arg1, arg2,..."/>
- -->
  		<label>Call Data</label>
  		{{> dapp_dataTextarea cols="20" rows="4" value=callData}}
  		<input type="submit" value="Send">
 	</form>
 </Template>
 
-<Template name="HolderList">
+<Template name="VoteFor">
 	<h2>Vote For</h2>
-	{{#each addrList}}
-		<button>
-			{{> dapp_identicon identity=this class="dapp-tiny"}}
-			<span name="address">{{this}}</span>
-		</button>
-	{{/each}}
+	<form>
+		<select name="preference">
+			{{#each addrList}}
+				<option value="{{this}}">
+					{{> dapp_identicon value=this class="dapp-small"}}{{this}}
+				</option>
+			{{/each}}
+		</select>
+ 		<input type="submit" value="Vote">
+	</form>
 </Template>
+
 
 <Template name="Panic">
 	<h3>PANIC</h3>
-	<strong>WARNING!</strong> This action will freeze functionality of Bakt for a minimum of 2 days.
+	<strong>WARNING!</strong> This action will freeze functionality of Bakt for a period of {{period}} seconds.
 	You <strong>WILL NOT</strong> be able to:
 	<ul>
 		<li>Withdraw funds</li>
@@ -181,7 +168,6 @@
 		<li>Transfer tokens</li>
 		<li>Buy or Redeem</li>
 		<li>Claim dividends</li>
-		<li>Change contracts operational state</li>
 	</ul>
 	You <strong>WILL</strong> be able to:
 	<ul>
@@ -194,4 +180,19 @@
 		<input type="checkbox" name="validation"><label for="validation">Are you sure you want to cause a Panic?</label>
 		<input type="submit">
 	</form>
+</Template>
+
+<Template name="Wait">
+	<div class="sk-cube-grid">
+        <div class="sk-cube sk-cube1"></div>
+        <div class="sk-cube sk-cube2"></div>
+        <div class="sk-cube sk-cube3"></div>
+        <div class="sk-cube sk-cube4"></div>
+        <div class="sk-cube sk-cube5"></div>
+        <div class="sk-cube sk-cube6"></div>
+        <div class="sk-cube sk-cube7"></div>
+        <div class="sk-cube sk-cube8"></div>
+        <div class="sk-cube sk-cube9"></div>
+    </div>
+
 </Template>

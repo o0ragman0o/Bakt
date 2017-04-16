@@ -1,6 +1,6 @@
 /*
 file:   Bakt.sol
-ver:    0.2.3_tc_alpha
+ver:    0.2.4
 updated:12-April-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
@@ -152,7 +152,7 @@ contract BaktInterface
 /* Events */
 
     // Triggered when contract recieved a payment
-    event Deposit(address indexed sender, uint value);
+    event Deposit(uint value);
 
     // Triggered when a ether is sent from the contract
     event Withdrawal(address indexed sender, address indexed recipient,
@@ -388,7 +388,7 @@ contract Bakt is BaktInterface
         payable
     {
         require(msg.value > 0 && acceptingPayments);
-        Deposit(msg.sender, msg.value);
+        Deposit(msg.value);
     }
     
     // Destructor
@@ -1089,7 +1089,7 @@ contract BaktFactory is Factory
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.2.3_tc_alpha";
+    bytes32 constant public VERSION = "Bakt_Factory v0.2.4";
     
 
 /* Constructor Destructor*/

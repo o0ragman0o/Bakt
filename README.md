@@ -21,7 +21,7 @@
 * Allows the *Trustee* to pay dividends to the *Holder*.
 * Allows the *Trustee* to unilaterally order the withdrawal of uncommitted funds.
 * Allows *Holders* to order the withdrawal of their balance of *ether*.
-* Prevents *pending transactions* from being sent for 1 day.
+* Prevents *pending transactions* from being sent a set delay.
 * Allows any holder to *block* a *pending transaction*.
 * Allows any holder to execute a transaction past its pending timestamp.
 * Allows any holder to cause a **panic**.
@@ -32,7 +32,7 @@
 ### Governance Model
 A primary requirement of this contract is to provide a perpetual and liquid mechanism to elect a trustee of the fund.  This requires a vote count across the entire membership of holders in O(N) time after every change to a single holder's voting preference or balance of tokens. A necessary bounding limit upon holder numbers is required to prevent Out Of Gas errors.  This has been set at 255 and so forces the election loop to O(255) time regardless of the actual number of Holders registered.
 
-This limit impacts upon the freedom to transfer tokens by limiting the recipients to registered holders only.  It is this property which renders the contract `exclusive`.
+This limit impacts upon the freedom to transfer tokens by limiting the recipients to registered holders only.  It is this property which renders the contract *exclusive*.
 
 Holders are explicitly added to the contract by the Trustee and a new holder's voting preference defaults to the current Trustee until they explicitly change it by calling `vote()`.
 
@@ -127,7 +127,9 @@ function _init(uint40 _panicDelayInSeconds, uint40 _pendingDelayInSeconds) retur
 WARNING This action is one off and is irrevocable! 
 This will set the OTP (One Time Programable) panic and pending periods. Holders *cannot* be added
 until this function has been called.
+
 `_panicDelayInSeconds` The panic delay period in seconds. (1 day == 86400 seconds) 
+
 `_pendingDelayInSeconds` The pending period in seconds.
 ### fundBalance
 ```
@@ -339,7 +341,7 @@ Allows the Trustee to register new holder accounts by providing an array of addr
 `_addrs` and array of upto 20 addresses
 ## Events 
 ```
-Deposit(sender, value);
+Deposit(value);
 ```
 Triggered when contract recieved a payment
 ```

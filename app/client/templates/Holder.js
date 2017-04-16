@@ -86,7 +86,7 @@ Template.Holder.events({
 	},
 	'click #btn_claim': function (e, template) {
 		currentBakt.updateDividendsFor(holderAddr.get(),
-			{from: holderAddr.get(), gas: 300000}, update)
+			{from: holderAddr.get(), gas: 300000}, cb)
 	},
 	'click #btn_panic': function (event, template){
 		EthElements.Modal.show({template: 'Panic'});
@@ -97,8 +97,8 @@ Template.Holder.events({
 	'click #btn_execute': function (e, template) {
 		EthElements.Modal.show({template:"Execute"})
 	},
-	'click #btn_addHolders': function (e, template) {
-		EthElements.Modal.show({template:"AddHolders"})
+	'click #btn_addHolder': function (e, template) {
+		EthElements.Modal.show({template:"AddHolder"})
 	},
 	'click #btn_setPrice': function (e, template) {
 		EthElements.Modal.show({template:"SetPrice"})
@@ -107,7 +107,8 @@ Template.Holder.events({
 		EthElements.Modal.show({template:"PayDividends"})
 	},
 	'click #btn_vote': function (e, template) {
-		EthElements.Modal.show({template:"HolderList"})
+		EthElements.Modal.show({template:"VoteFor"})
+		// EthElements.Modal.show({template:"HolderList"})
 	}
 })
 

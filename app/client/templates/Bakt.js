@@ -2,7 +2,7 @@ import "./Bakt.html"
 
 Template.Bakt.helpers ({
 	baktAddr: function () {
-		return baktDict.baktAddress.get();
+		return web3.toChecksumAddress(baktDict.baktAddress.get());
 	},
 	kBalance: function() {
 		return web3.eth.getBalance(baktDict.address);
@@ -22,6 +22,12 @@ Template.Bakt.helpers ({
 	totalSupply: function() {
 		return baktDict.totalSupply.get();
 	},
+	regName: function() {
+		return baktDict.regName.get();
+	},
+	version: function() {
+		return baktDict.version.get();
+	}
 })
 
 Template.Bakt.events ({

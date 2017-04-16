@@ -1,6 +1,10 @@
 import "./PendingTXList.html";
 
 Template.PendingTXList.helpers ({
+	clearSend: function() {
+		if(baktDict.pendingTXs.get().length)
+			return baktDict.pendingTXs.get()[0].blocked ? "Clear" : "Send";
+	},
 	pendingTXs: function() {
 		return baktDict.pendingTXs.get();
 	},
@@ -20,7 +24,8 @@ Template.PendingTXList.events ({
 
 Template.PendingTX.helpers ({
 	'sendState': function () {
-		return this.blocked ? "blocked" :
+		return this.blocked ? 
+			this.timeLock < Date.now() ? "clearBlocked" : "blocked" :
 			this.timeLock < Date.now() ? "cleared" : "waiting";
 	},
 })
@@ -28,12 +33,7 @@ Template.PendingTX.helpers ({
 Template.PendingTX.events ({
 	'click #btn_block': function (e, template) {
 		console.log(this);
-		currentBakt.blockPendingTx(this.ptxid, {from:ethAccount.get().address, gas:90000},
-			function() {
-				EthElements.Modal.show({
-					template: "Waiting"
-				})
-				console.log("Blocked: ", this.ptxid)});
+		currentBakt.blockPendingTx(this.ptxid, {from:ethAccount.get().address, gas:90000},cb);
 	}
 })
 

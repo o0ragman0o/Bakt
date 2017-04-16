@@ -1,8 +1,10 @@
 <Template name="Container">
     <div  class="bakt-container {{opState}}">
-            {{> Bakt }}
-            {{> Holder }}
-            {{> PendingTXList}}
+            {{#if hasBakt}}
+	            {{> Bakt }}
+	            {{> Holder }}
+	            {{> PendingTXList}}
+            {{/if}}
     </div>
 </Template>
 

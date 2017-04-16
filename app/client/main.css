@@ -45,10 +45,13 @@ button {
 	border: 1px solid;
 	border-color: #ddf;
 	border-radius: 3px;
+	background-color: rgba(255,255,255,0.8);
 }
+
 button:hover {
 	/*border-bottom: 1px;*/
-	background-color: #eef;
+	background-color: rgba(240,240,255,0.8);
+	/*background-color: #eef;*/
 }
 
 ul {
@@ -100,7 +103,7 @@ ul {
     box-shadow: 2px 2px 5px #888888;
     border-radius: 6px;
 	width: 600px;
-	background-color: rgba(255,255,255,0.9);
+	background-color: rgba(255,255,255,0.8);
 }
 
 
@@ -128,7 +131,6 @@ ul {
 
 .cleared {
 	background-color: #afa;
-
 }
 
 .waiting {
@@ -137,7 +139,11 @@ ul {
 }
 
 .blocked {
-	background-color: #faa;
+	background-color: #fbb;
+}
+
+.clearBlocked {
+	background-color: #f77;
 }
 
 

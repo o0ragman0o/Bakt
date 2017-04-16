@@ -7,14 +7,8 @@ Template.ChangeBakt.events ({
 	'submit form' (event, template) {
 		event.preventDefault();
 		var addr = TemplateVar.get("baktAddr");
-		if(addr === undefined) {
-			FlowRouter.go("/");
-			return;
-		}
-		FlowRouter.go("/" + addr);
-		// currentBakt = baktContract.at(baktDict.baktAddress.get());
-		// update();
 		modalcb();
+		FlowRouter.go('/' + addr);
 	}
 })
 
@@ -48,7 +42,7 @@ Template.PayInto.helpers({
 Template.PayInto.events({
 	'submit form' (event, template) {
 		event.preventDefault();
-		var value = new BigNumber(event.target.children.ethValue.value * 10**18);
+		var value = new BigNumber(event.target.children.ethValue.value * Math.pow(10,18));
 		web3.eth.sendTransaction({to:baktDict.baktAddress.get(), value: value, from:holderAddr.get()}, modalcb);
 	}
 })
@@ -62,7 +56,7 @@ Template.Withdraw.helpers({
 Template.Withdraw.events({
 	'submit form' (event, tempate) {
 		event.preventDefault();
-		var value = new BigNumber(event.target.children.withdraw.value * 10**18);
+		var value = new BigNumber(event.target.children.withdraw.value * Math.pow(10,18));
 		currentBakt.withdraw(value, {from:holderAddr.get(), gas:300000}, modalcb);
 	}
 })
@@ -70,6 +64,15 @@ Template.Withdraw.events({
 Template.Transfer.helpers({
 	tokenBalance: function () {
 		return baktDict.holder.get().tokenBalance;
+	},
+	addrList: function () {
+		holders = currentBakt.getHolders();
+		l = [];
+		var i = 1;
+		while(i < 256 &&
+			holders[i] != "0x0000000000000000000000000000000000000000")
+			l.push(holders[i++]);
+		return l;
 	}
 })
 
@@ -77,15 +80,16 @@ Template.Transfer.events({
 	'submit form' (event, template) {
 		event.preventDefault();
 		var amount = event.target.children.amount.value;
-		var to = event.target.children[1].children[0].value;
-		var batch = web3.createBatch();
-		// currentBakt.claimDividendsFor(holderAddr.get(),{from:holderAddr.get(), gas:300000});
-		batch.add(currentBakt.claimDividendsFor.request(holderAddr.get(),{from:holderAddr.get(), gas:300000}, function(e, result){console.log(1, e, result);}));
-		batch.add(currentBakt.claimDividendsFor.request(to,{from:holderAddr.get(), gas:300000},function(e, result){console.log(2, e, result);}));
-		batch.add(currentBakt.transfer.request(to, amount,{from:holderAddr.get(), gas:300000},function(e, result){console.log(3, e, result);}));
-		batch.execute();
+		var to = event.target.children.addr.value;
+		console.log(to);
+		if (currentBakt.hasUnclaimedDividends(to))
+			currentBakt.updateDividendsFor(to, {from:holderAddr.get(), gas:300000}, cb);
+		currentBakt.transfer(to, amount, {from:holderAddr.get(), gas:300000}, modalcb);
+		// var batch = web3.createBatch();
+		// batch.add(currentBakt.updateDividendsFor.request(to,{from:holderAddr.get(), gas:300000}));
+		// batch.add(currentBakt.transfer.request(to, amount,{from:holderAddr.get(), gas:300000}));
+		// batch.execute();
 	}
-
 })
 
 Template.Allow.helpers({
@@ -137,8 +141,14 @@ Template.Redeem.events({
 	}
 })
 
+Template.Panic.helpers({
+	'period': function () {
+		return currentBakt.PANICPERIOD().toNumber();
+	},
+})
+
 Template.Panic.events({
-		'submit form': function (event, template){
+	'submit form': function (event, template){
 		event.preventDefault();
 		if (event.target.children.validation.checked) {
 			currentBakt.PANIC({from:holderAddr.get()}, modalcb);
@@ -157,7 +167,7 @@ Template.PayDividends.helpers({
 Template.PayDividends.events({
 	'submit form' (e, template) {
 		e.preventDefault();
-		dividend = e.target.children.dividends.value * 10**18;
+		dividend = e.target.children.dividends.value * Math.pow(10,18);
 		console.log(dividend);
 		currentBakt.payDividends(dividend,{from:holderAddr.get(), gas:200000}, modalcb)
 	}
@@ -172,13 +182,13 @@ Template.SetPrice.helpers({
 Template.SetPrice.events({
 	'submit form' (e, template) {
 		e.preventDefault();
-		price = e.target.children.tokenPrice.value * 10**18;
+		price = e.target.children.tokenPrice.value * Math.pow(10,18);
 		console.log(price, holder);
 		currentBakt.setTokenPrice(price,{from:holderAddr.get()}, modalcb);		
 	}
 })
 
-Template.AddHolders.events({
+Template.AddHolder.events({
 	'submit form' (e, template) {
 		e.preventDefault();
 		t = e.target.children[0].children[0];
@@ -207,7 +217,7 @@ Template.Execute.events({
 		TemplateVar.set("to", TemplateVar.getFrom(e.currentTarget, 'value'));
 	},
 	'input #sendValue' (e, template) {
-		TemplateVar.set("sendValue", e.target.value * 10**18);
+		TemplateVar.set("sendValue", e.target.value * Math.pow(10,18));
 	},
 	'input #abi' (e, template) {
 
@@ -241,7 +251,7 @@ Template.Execute.events({
 
 })
 
-Template.HolderList.helpers ({
+Template.VoteFor.helpers ({
 	addrList: function () {
 		holders = currentBakt.getHolders();
 		l = [];
@@ -253,10 +263,9 @@ Template.HolderList.helpers ({
 	}
 })
 
-Template.HolderList.events({
-	'click button': function (e, template) {
-		voteFor = e.target.innerText;
-		console.log(voteFor);
-		currentBakt.vote(voteFor,{from:holderAddr.get(), gas:1000000}, modalcb)
-	},
+Template.VoteFor.events({
+	'submit form' (event) {
+		event.preventDefault();	
+		currentBakt.vote(event.target.children.preference.value, {from:holderAddr.get(), gas:300000}, modalcb); 	
+	}
 })

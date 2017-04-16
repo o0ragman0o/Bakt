@@ -3,8 +3,8 @@
 	<h1>{{> dapp_identicon identity=holderAddr class="dapp-small"}} Holder</h1>
 		<div id="accountSelect">{{> dapp_selectAccount accounts=accounts class="dapp_small"}}</div>
  		{{#with holder}}
-			<div><label>Token Balance</label> {{tokenBalance}}</div>
-			<div><label>Ether Balance</label> {{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;</div>
+			<div><label>Tokens</label> {{tokenBalance}}</div>
+			<div><label>Ether</label> {{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;</div>
 		{{/with}}
 		<h3></h3>
 		<div class="{{isHolder}}">
@@ -52,7 +52,7 @@
 				<button id="btn_setPrice" class="">
 					<label>Set Price</label>
 				</button>
-				<button id="btn_addHolders" class="">
+				<button id="btn_addHolder" class="">
 					<label>Add Holder</label>
 				</button>
 			</div>

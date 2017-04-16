@@ -2,7 +2,10 @@ import "./container.html";
 
 Template.Container.helpers ({
 	opState: function() {
-		return ["normal","panicked"][baktDict.panicked.get()];
+		if (baktDict.panicked.get()) return "panicked";
+	},
+	hasBakt: function() {
+		return baktDict.live.get();
 	},
 
 })

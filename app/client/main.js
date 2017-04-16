@@ -3,24 +3,23 @@ import { ReactiveVar } from 'meteor/reactive-var';
 
 import './main.html';
 
-modalcb = function(e) {
-	console.log(e);
+cb = function(error, result) {
+	if(!error) {
+		console.log(result);
+	} else {
+		handleError(error);
+	}
+}
+
+handleError = function(error) {
+	console.log(error);
+}
+
+modalcb = function(error, result) {
+	cb(error, result);
 	EthElements.Modal.hide();
 }
 
-handleError = function(e) {
-	console.log(e);
-}
-
-
-// baktAddr = "0x3b3d3de7a3271f0f6bea0b6b99e6f26a64dd3617";
-// baktAddr = "0x0c49a7bd2cf4db5c00258a79e0561b854f4b61fd";
-// baktAddr = "0x0580c4e173ffce2d6547c697399f1da9bac08fff";
-// baktAddr = "0x544aaef4577ac8fae471240de83497b1fb1a586b";
-// baktAddr = "0x4fc2eed0f68115079d29cbbe3c6f1c9bd6b51805";
-// baktAddr = "0x76278fee9d8051311b9adf6f2b017cb802e34ec5";
-baktAddr ="";
-// currentBakt = "";
 holder = new ReactiveVar();
 holderAddr = new ReactiveVar();
 holderAddr.set(EthAccounts.findOne().address);
@@ -29,6 +28,8 @@ ethAccount = new ReactiveVar();
 
 baktDict = {
 	baktAddress: new ReactiveVar(),
+	regName: new ReactiveVar(),
+	version: new ReactiveVar(),
 	panicked: new ReactiveVar(),
 	timeLock: new ReactiveVar(new BigNumber(0)),
 	timeToCalm: new ReactiveVar(new BigNumber(0)),
@@ -43,10 +44,13 @@ baktDict = {
 	hasUnclaimedDividends: new ReactiveVar(),
 	holder: new ReactiveVar(new BigNumber(0)),
 	pendingTXs: new ReactiveVar(),
+	live: new ReactiveVar(),
 }
 
 update = function () {
 	baktDict.panicked.set(currentBakt.panicked());
+	baktDict.regName.set(web3.toUtf8(currentBakt.regName()));
+	baktDict.version.set(web3.toUtf8(currentBakt.VERSION()));
 	baktDict.timeToCalm.set(currentBakt.timeToCalm());
 	baktDict.totalSupply.set(currentBakt.totalSupply());
 	baktDict.fundBalance.set(currentBakt.fundBalance());
@@ -54,7 +58,7 @@ update = function () {
 	baktDict.tokenPrice.set(currentBakt.tokenPrice());
 	baktDict.totalSupply.set(currentBakt.totalSupply());
 	baktDict.trustee.set(currentBakt.trustee());
-	baktDict.hasUnclaimedDividends.set(currentBakt.hasUnclaimedDividends(ethAccount.get().address));
+	baktDict.hasUnclaimedDividends.set(currentBakt.hasUnclaimedDividends(holderAddr.get()));
 	baktDict.holder.set(function () {
 			arr = currentBakt.holders(holderAddr.get());
 			return {
@@ -94,20 +98,34 @@ update = function () {
 	);
 }
 
-ethAccount.set(EthAccounts.findOne());
 
-// if (baktAddr != "") {
-// 	currentBakt = baktContract.at(baktAddr);
-// 	update()
-// } else {
-// 	EthElements.Modal.show({
-// 			template: 'ChangeBakt',
-// 	});
-// }
+changeBakt = function (baktAddr) {
+	delete currentBakt;
+	baktDict.live.set(false);
+	if(baktAddr) {
+		baktDict.baktAddress.set(baktAddr);
+		currentBakt = baktContract.at(baktAddr);
+		try { currentBakt.VERSION() }
+		catch(err) { 
+			console.log(err);
+			modalcb();
+			FlowRouter.go('/');			
+		}
+		if (web3.toUtf8(currentBakt.VERSION()).slice(0,4) == "Bakt"){
+			baktDict.live.set(true);
+			localStorage.setItem("lastBakt", baktAddr);
+			modalcb();
+			update();
+			oneSec = Meteor.setInterval(update, 1000);
+		} else {
+			modalcb();
+			FlowRouter.go('/');
+		}
+	} else {
+		modalcb();
+		FlowRouter.go('/');
+	}
 
-web3.eth.filter().watch(function () {
-	// update();
-});
+}
 
 
-// update();
