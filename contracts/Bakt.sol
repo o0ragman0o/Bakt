@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.2.4
-updated:12-April-2017
+ver:    0.2.5
+updated:16-Apr-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -94,10 +94,10 @@ contract BaktInterface
     bool public acceptingPayments;
 
     // The period for which a panic will prevent functionality to the contract
-    uint40 PANICPERIOD;
+    uint40 public PANICPERIOD;
     
     // The period for which a pending transaction must wait before being sent 
-    uint40 TXDELAY;
+    uint40 public TXDELAY;
     
     /// @return The Panic flag state. false == calm, true == panicked
     bool public panicked;
@@ -368,7 +368,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.2.3_tc_alpha";
+    bytes32 constant public VERSION = "Bakt 0.2.4";
 
 //
 // Bakt Functions
@@ -1084,12 +1084,12 @@ contract BaktFactory is Factory
 {
     
     // Live:
-    // Ropsten: 0x8FcE7Eae3A1367bCf7FdBfbb0BEf919DC8d92D80
+    // Ropsten: v0.2.4 - 0x8FcE7Eae3A1367bCf7FdBfbb0BEf919DC8d92D80
     
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.2.4";
+    bytes32 constant public VERSION = "Bakt_Factory v0.2.5";
     
 
 /* Constructor Destructor*/
@@ -1106,8 +1106,10 @@ contract BaktFactory is Factory
     function createNew(bytes32 _regName, address _owner)
         payable
         feePaid
+        returns (bool)
     {
         last = new Bakt(owner, _regName, msg.sender);
         Created(msg.sender, _regName, last);
+        return true;
     }
 }
