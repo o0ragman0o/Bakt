@@ -18,7 +18,7 @@ Template.PendingTXList.helpers ({
 
 Template.PendingTXList.events ({
 	'click #btn_send': function (e, template) {
-		currentBakt.sendPending({from:ethAccount.get().address, gas:90000});
+		currentBakt.sendPending({from:holderAddr.get(), gas:90000});
 	},
 })
 
@@ -33,7 +33,7 @@ Template.PendingTX.helpers ({
 Template.PendingTX.events ({
 	'click #btn_block': function (e, template) {
 		console.log(this);
-		currentBakt.blockPendingTx(this.ptxid, {from:ethAccount.get().address, gas:90000},cb);
+		currentBakt.blockPendingTx(this.ptxid, {from:holderAddr.get(), gas:90000},cb);
 	}
 })
 
