@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.2.5
-updated:16-Apr-2017
+ver:    0.2.6_tc_alpha
+updated:18-Apr-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -368,7 +368,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.2.4";
+    bytes32 constant public VERSION = "Bakt 0.2.6_tc_alpha";
 
 //
 // Bakt Functions
@@ -1084,12 +1084,13 @@ contract BaktFactory is Factory
 {
     
     // Live:
-    // Ropsten: v0.2.4 - 0x8FcE7Eae3A1367bCf7FdBfbb0BEf919DC8d92D80
+    // Ropsten: v0.2.4-tc-alpha - 0x8FcE7Eae3A1367bCf7FdBfbb0BEf919DC8d92D80
+    // Ropsten: v0.2.6-tc-alpha - 0x388c0d7aac9cd2846b11f7435ebbb6772d645c56
     
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.2.5";
+    bytes32 constant public VERSION = "Bakt_Factory v0.2.6-tc-alpha";
     
 
 /* Constructor Destructor*/
@@ -1106,10 +1107,9 @@ contract BaktFactory is Factory
     function createNew(bytes32 _regName, address _owner)
         payable
         feePaid
-        returns (bool)
+        returns (address kAddr_)
     {
-        last = new Bakt(owner, _regName, msg.sender);
-        Created(msg.sender, _regName, last);
-        return true;
+        kAddr_ = new Bakt(owner, _regName, msg.sender);
+        Created(msg.sender, _regName, kAddr_);
     }
 }
