@@ -1,6 +1,6 @@
 FlowRouter.route('/', {
     name: "address",
-    action: function(params, queryParams) {
+    action: function(params) {
 		EthElements.Modal.show({
 				template: 'ChangeBakt',
 		});
@@ -9,8 +9,8 @@ FlowRouter.route('/', {
 
 FlowRouter.route('/:baktAddr', {
     name: "address",
-    action: function(params, queryParams) {
-    	
+    action: function(params) {
+
     	changeBakt(params.baktAddr);
    }
 });
