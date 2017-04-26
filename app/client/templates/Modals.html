@@ -2,7 +2,10 @@
 	<h3>Bakt Address</h3>
 	<form>
 		{{> dapp_addressInput name="allow" value=address class="dapp-medium"}}
-		<input type="submit" />
+		{{#if isBakt}}<input type="submit" value="Bakt Found!"/>
+		{{else}}No Bakt found
+		{{/if}}
+		
 	</form>
 </Template>
 

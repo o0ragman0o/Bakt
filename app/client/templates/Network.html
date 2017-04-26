@@ -1,0 +1,11 @@
+<Template name="Network">
+	<div class="network">
+	{{#if liveStatus}}
+	LIVE - {{network}} {{blockNumber}}<br>
+	{{provider}}<br>
+	Bakt: {{baktAddr}}<br>
+	Account: {{holderAddr}}
+	{{else}}OFFLINE
+	{{/if}}
+	</div>
+</Template>

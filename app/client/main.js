@@ -21,6 +21,7 @@ modalcb = function(error, result) {
 }
 
 holder = new ReactiveVar();
+isLive = new ReactiveVar();
 holderAddr = new ReactiveVar();
 holderAddr.set(EthAccounts.findOne().address);
 
@@ -98,20 +99,27 @@ update = function () {
 	);
 }
 
+// liveStatus = function () {
+// 	isLive.set();
+// }
+
+// Tracker.autorun(liveStatus)
+
 
 changeBakt = function (baktAddr) {
-	delete currentBakt;
+	// delete currentBakt;
 	baktDict.live.set(false);
 	if(baktAddr) {
-		baktDict.baktAddress.set(baktAddr);
 		currentBakt = baktContract.at(baktAddr);
 		try { currentBakt.VERSION() }
 		catch(err) { 
 			console.log(err);
+			// delete currentBakt;
 			modalcb();
 			FlowRouter.go('/');			
 		}
 		if (web3.toUtf8(currentBakt.VERSION()).slice(0,4) == "Bakt"){
+			baktDict.baktAddress.set(baktAddr);
 			baktDict.live.set(true);
 			localStorage.setItem("lastBakt", baktAddr);
 			modalcb();

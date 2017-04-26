@@ -1,8 +1,16 @@
 import "./Modals.html";
 
+Template.ChangeBakt.helpers ({
+	isBakt: function () {
+		return TemplateVar.get("isBakt");
+	}
+})
+
 Template.ChangeBakt.events ({
-	'change .dapp-address-input input': function(e) {
-		TemplateVar.set("baktAddr", TemplateVar.getFrom(e.currentTarget, 'value'));
+	'change .dapp-address-input input': function(event) {
+		var baktAddr = event.currentTarget.value;
+		TemplateVar.set("isBakt", web3.toUtf8(baktContract.at(baktAddr).VERSION()).slice(0,4) == "Bakt");
+		TemplateVar.set("baktAddr", baktAddr);
 	},
 	'submit form' (event, template) {
 		event.preventDefault();
