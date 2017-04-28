@@ -1,6 +1,6 @@
 /*
 file:   Bakt.sol
-ver:    0.3.0
+ver:    0.3.0-tc-alpha 
 updated:27-Apr-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
@@ -47,10 +47,14 @@ Breaking changes:
         uint offerExpiry;
 - issue(holder, amount, price, period) Creates a time limited offer to a holder to
 purchase new tokens. Joins holder if not already a holder.
-- revoke(holder) Revokes an oustanding offer.
+- revoke(address) Revokes an oustanding offer.
 - purchase() has changed to only buy tokens on offer to holder.
-- addHolders([]) has been removed
+- addHolders([]) removed
+- addHolder(address) added
 - IssueOffer(address) event added
+
+Ropsten: 0.3.0-tc-alpha - 0x030f7baf30ebece8a95f892c66c56dd9a293ccd6
+
 */
 
 import "https://github.com/o0ragman0o/SandalStraps/contracts/Factory.sol";
@@ -383,7 +387,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.3.0";
+    bytes32 constant public VERSION = "Bakt 0.3.0-tc-alpha";
 
 //
 // Bakt Functions
@@ -691,12 +695,23 @@ contract Bakt is BaktInterface
         return true;
     }
     
+    function addHolder(address _addr)
+        public
+        canEnter
+        onlyTrustee
+        returns (bool)
+    {
+        return join(_addr);
+    }
+    
     // Creates holder accounts.  Called by addHolders()
     function join(address _addr)
         internal
+        returns (bool)
     {
-        // return not throw on invalid join so as not to break `addholders` loop
-        if (0 != holders[_addr].id || _addr == address(this)) return;
+        if(0 != holders[_addr].id) return true;
+
+        require(_addr != address(this));
 
         uint8 id;
         // Search for the first available slot. 
@@ -710,6 +725,7 @@ contract Bakt is BaktInterface
         holders[_addr].votingFor = trustee;
         holderIndex[holders[_addr].id] = _addr;
         NewHolder(_addr);
+        return true;
     }
     
     function acceptPayments(bool _accepting)
@@ -1102,7 +1118,7 @@ contract BaktFactory is Factory
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.3.0";
+    bytes32 constant public VERSION = "Bakt_Factory v0.3.0-tc-alpha ";
     
 
 /* Constructor Destructor*/
