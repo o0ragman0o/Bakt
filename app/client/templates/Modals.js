@@ -115,20 +115,136 @@ Template.Allow.events({
 	}
 })
 
-Template.Purchase.helpers({
-	price: function () {
-		return currentBakt.tokenPrice();
+Template.AddHolder.events({
+	'submit form' (e, template) {
+		e.preventDefault();
+		t = e.target.children[0].children[0];
+		holder = t.value;
+		console.log(t.value, holder);
+
+		currentBakt.addHolder(holder,{from:holderAddr.get()}, modalcb);
 	}
+})
+
+Template.Issue.helpers({
+	tokenPrice: function () {
+		return baktDict.tokenPrice.get();
+	}
+})
+
+Template.Issue.events({
+	'change .dapp-address-input input': function(event) {
+		TemplateVar.set("account", event.currentTarget.value);
+	},
+	'submit form' (event, template) {
+		event.preventDefault();
+		address = TemplateVar.get("account");
+		amount = event.target.amount.value;
+		lotPrice = event.target.lotPrice.value * Math.pow(10,18);
+		expiry = new Date(event.target.expiry.value);
+		expiry = Math.round(expiry/1000);
+		currentBakt.issue(address, amount, lotPrice, expiry, {from:holderAddr.get(), gas:300000}, modalcb);
+	}
+})
+
+Template.Revoke.helpers({
+	addrList: function () {
+		holders = currentBakt.getHolders();
+		l = [];
+		var i = 1;
+		while(i < 256 &&
+			holders[i] != "0x0000000000000000000000000000000000000000")
+			l.push(holders[i++]);
+		return l;
+	},
+	amount: function () {
+		return TemplateVar.get("rHolder").offerAmount;
+	},
+	price: function () {
+		return TemplateVar.get("rHolder").offerPrice;
+	},
+	expiry: function () {
+		d = TemplateVar.get("rHolder").offerExpiry * 1000
+		if (d) {
+			d = new Date(d);
+			d = d.toLocaleString();
+		} else {
+			d = "--/--/--";
+		}
+		return d;
+	},
+})
+
+Template.Revoke.rendered = function (){
+	addr = this.find('select').value;
+	TemplateVar.set("rHolder",
+		function () {
+			arr = currentBakt.holders(addr);
+			return {
+				id: arr[0],
+				lastClaimed: arr[1],
+				votingFor: arr[2],
+				tokenBalance: arr[3],
+				etherBalance: arr[4],
+				votes: arr[5],
+		        offerAmount:arr[6],
+		        offerPrice:arr[7],
+		        offerExpiry:arr[8],
+			};
+		}()
+	);
+}
+
+Template.Revoke.events({
+	'change select': function (e, template) {
+		addr = event.target.value;
+		TemplateVar.set("rHolder",
+			function () {
+				arr = currentBakt.holders(addr);
+				return {
+					id: arr[0],
+					lastClaimed: arr[1],
+					votingFor: arr[2],
+					tokenBalance: arr[3],
+					etherBalance: arr[4],
+					votes: arr[5],
+			        offerAmount:arr[6],
+			        offerPrice:arr[7],
+			        offerExpiry:arr[8],
+				};
+			}()
+		);
+	},
+	'submit form' (event, template) {
+		event.preventDefault();
+		address = event.target.children.holders.value
+		currentBakt.revoke(address, {from:holderAddr.get(), gas:300000}, modalcb);		
+	}
+})
+
+Template.Purchase.helpers({
+	holder: function () {
+		return baktDict.holder.get();
+	},
+	expiry: function () {
+		d = new Date(baktDict.holder.get().offerExpiry * 1000);
+		if (d) {
+			d = new Date(d);
+			d = d.toLocaleString();
+		} else {
+			d = "--/--/--";
+		}
+		return d;
+	},
 })
 
 Template.Purchase.events({
 	'submit form' (event, template) {
 		event.preventDefault();
-		amount = event.target.amount.value;
-		spend = (amount * currentBakt.tokenPrice()) - currentBakt.etherBalanceOf(holderAddr.get()).toNumber();
+		spend = baktDict.holder.get().offerPrice;
 		currentBakt.purchase({from:holderAddr.get(), value:spend, gas:300000}, modalcb);
 	}
-}),
+})
 
 Template.Redeem.helpers({
 	rPrice: function () {
@@ -196,16 +312,16 @@ Template.SetPrice.events({
 	}
 })
 
-Template.AddHolder.events({
-	'submit form' (e, template) {
-		e.preventDefault();
-		t = e.target.children[0].children[0];
-		holder = t.value;
-		console.log(t.value, holder);
+// Template.AddHolder.events({
+// 	'submit form' (e, template) {
+// 		e.preventDefault();
+// 		t = e.target.children[0].children[0];
+// 		holder = t.value;
+// 		console.log(t.value, holder);
 
-		currentBakt.addHolders([holder],{from:holderAddr.get()}, modalcb);
-	}
-})
+// 		currentBakt.addHolders([holder],{from:holderAddr.get()}, modalcb);
+// 	}
+// })
 
 Template.Execute.helpers({
 	fundBalance: function () {

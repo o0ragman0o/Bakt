@@ -55,6 +55,10 @@ Template.Holder.helpers({
 		if(baktDict.holder.get().id.toNumber()) return "show";
 		else return "hide";
 	},
+	isExpired: function () {
+		if (Date.now() > baktDict.holder.get().offerExpiry * 1000) return "hide";
+		else return "show";
+	}
 
 })
 
@@ -100,14 +104,20 @@ Template.Holder.events({
 	'click #btn_addHolder': function (e, template) {
 		EthElements.Modal.show({template:"AddHolder"})
 	},
+	'click #btn_issue': function (e, template) {
+		EthElements.Modal.show({template:"Issue"});
+	},
+	'click #btn_revoke': function (e, template) {
+		EthElements.Modal.show({template:"Revoke"});
+	},
 	'click #btn_setPrice': function (e, template) {
-		EthElements.Modal.show({template:"SetPrice"})
+		EthElements.Modal.show({template:"SetPrice"});
 	},
 	'click #btn_payDividends': function (e, template) {
-		EthElements.Modal.show({template:"PayDividends"})
+		EthElements.Modal.show({template:"PayDividends"});
 	},
 	'click #btn_vote': function (e, template) {
-		EthElements.Modal.show({template:"VoteFor"})
+		EthElements.Modal.show({template:"VoteFor"});
 		// EthElements.Modal.show({template:"HolderList"})
 	}
 })

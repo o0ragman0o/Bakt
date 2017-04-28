@@ -69,6 +69,10 @@ update = function () {
 				tokenBalance: arr[3],
 				etherBalance: arr[4],
 				votes: arr[5],
+		        offerAmount:arr[6],
+		        offerPrice:arr[7],
+		        offerExpiry:arr[8],
+
 			};
 		}()
 	);

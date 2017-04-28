@@ -31,7 +31,7 @@
 				</button>
 				</div>
 				<div>
-				<button id="btn_purchase" class="{{noUnclaimed}}">
+				<button id="btn_purchase" class="{{noUnclaimed}} {{isExpired}}">
 					<label>Purchase</label>
 				</button>
 				<button id="btn_redeem" class="{{noUnclaimed}}">
@@ -55,7 +55,14 @@
 				<button id="btn_addHolder" class="">
 					<label>Add Holder</label>
 				</button>
-			</div>
+
+ 				<button id="btn_issue" class="">
+ 					<label>Issue</label>
+ 				</button>
+ 				<button id="btn_revoke" class="">
+ 					<label>Revoke</label> 					
+ 				</button>
+ 			</div>
 		</div>
 		<div class="foot {{isHolder}}">
 			<label>Voting For</label>

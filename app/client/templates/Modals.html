@@ -1,7 +1,7 @@
 <Template name="ChangeBakt">
 	<h3>Bakt Address</h3>
 	<form>
-		{{> dapp_addressInput name="allow" value=address class="dapp-medium"}}
+		{{> dapp_addressInput name="bakt" value=address class="dapp-medium"}}
 		{{#if isBakt}}<input type="submit" value="Bakt Found!"/>
 		{{else}}No Bakt found
 		{{/if}}
@@ -81,15 +81,19 @@
 
 <Template name="Purchase">
 	<h3>Purchase Tokens</h3>
+	{{#with holder}}
 	<form oninput="total.value=parseFloat(amount.value) * {{dapp_formatBalance price "0,0.00[0000]" "ether"}}">
-		<div>At {{dapp_formatBalance price "0,0.00[0000]" "ether"}} ether/token</div>
-		<label>Amount</label>
-		<input name="amount" type="number" minimum="0" maximum="{{max}}"/>
-		<label for="total">Total</label>
-		<output name="total" for="amount"></output>&Xi;
-		<input type="submit" />
+		<div>You have an offer to buy<br>
+		{{offerAmount}} tokens <br> 
+		for {{dapp_formatBalance offerPrice "0,0.00[0000]" "ether"}}&Xi; total</div>
+		<div>Offer expires after <br>
+		{{expiry}}</div>
+		<input type="submit" value="Accept"/>
+		<input type="button" value="Cancel"/>
 	</form>
+	{{/with}}
 </Template>
+
 
 <Template name="Redeem">
 	<h3>Redeem Tokens</h3>
@@ -118,6 +122,35 @@
 	<form>
 	{{> dapp_addressInput value=holderAddr class="dapp-medium"}}
 	<input type="submit" />
+	</form>
+</Template>
+
+<Template name="Issue">
+	<h3>Issue a Token Offer</h3>
+	<form>
+		To {{> dapp_addressInput name="account" value=address class="dapp-medium"}}<br>
+		Amount: <input name="amount" type="number" step="1"><br>
+		Lot Price: <input name="lotPrice" type="number" minimum='{{dapp_formatBalance minPrice "0,0.00[0000]" "ether"}}'
+			placeholder='{{dapp_formatBalance offerPrice "0,0.00[0000]" "ether"}}' step="any"/>&Xi;<br>
+		Expires: <input name="expiry" type="date"/>
+		<input type="submit" value="Place Offer"/>
+	</form>
+</Template>
+
+<Template name="Revoke">
+ <h3>Revoke Offer</h3>
+	<form>
+		<select name="holders">
+			{{#each addrList}}
+				<option value="{{this}}">
+					{{> dapp_identicon value=this class="dapp-small"}}{{this}}
+				</option>
+			{{/each}}
+		</select><br>
+		Amount: {{amount}}<br>
+		Lot Price: {{dapp_formatBalance price "0,0.00[0000]" "ether"}}&Xi;<br>
+		Expires: {{expiry}}<br>
+ 		<input type="submit" value="Revoke">
 	</form>
 </Template>
 

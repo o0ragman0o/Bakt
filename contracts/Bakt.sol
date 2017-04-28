@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.2.6_tc_alpha
-updated:18-Apr-2017
+ver:    0.3.0
+updated:27-Apr-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -40,6 +40,17 @@ Maximum number of holders is limited to 254 to prevent potential OOG loops
 during elections.
 Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 
+Breaking changes:
+- extended Holder struct with
+        uint offerAmount;
+        uint offerPrice;
+        uint offerExpiry;
+- issue(holder, amount, price, period) Creates a time limited offer to a holder to
+purchase new tokens. Joins holder if not already a holder.
+- revoke(holder) Revokes an oustanding offer.
+- purchase() has changed to only buy tokens on offer to holder.
+- addHolders([]) has been removed
+- IssueOffer(address) event added
 */
 
 import "https://github.com/o0ragman0o/SandalStraps/contracts/Factory.sol";
@@ -59,6 +70,9 @@ contract BaktInterface
         uint tokenBalance;
         uint etherBalance;
         uint votes;
+        uint offerAmount;
+        uint offerPrice;
+        uint40 offerExpiry;
         mapping (address => uint) allowances;
     }
     
@@ -188,6 +202,7 @@ contract BaktInterface
     // Triggered when a holder vacates
     event HolderVacated(address indexed holder);
     
+    event IssueOffer(address indexed holder);
     // Triggered when tokens are created during a funding round
     event TokensCreated(address indexed holder, uint amount);
     
@@ -296,9 +311,9 @@ contract BaktInterface
     /// @dev Allows the trustee to commit a portion of `fundBalance` to dividends.
     function payDividends(uint _value) returns (bool);
 
-    /// @notice Create new holder accounts
-    /// @param _addrs And array of addresses to create accounts for.
-    function addHolders(address[] _addrs) returns (bool);
+    // /// @notice Create new holder accounts
+    // /// @param _addrs And array of addresses to create accounts for.
+    // function addHolders(address[] _addrs) returns (bool);
 
 //
 // Holder Functions
@@ -368,7 +383,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.2.6_tc_alpha";
+    bytes32 constant public VERSION = "Bakt 0.3.0";
 
 //
 // Bakt Functions
@@ -676,21 +691,6 @@ contract Bakt is BaktInterface
         return true;
     }
     
-    // To add holders to the contract
-    function addHolders(address[] _addrs)
-        public
-        canEnter
-        onlyTrustee
-        returns (bool)
-    {
-        require(!__initFuse);
-        // limit the number of additions to 20 to prevent OOG
-        require(_addrs.length < 21);
-        
-        for (uint i = 0; i < _addrs.length; i++) join(_addrs[i]);
-        return true;
-    }
-
     // Creates holder accounts.  Called by addHolders()
     function join(address _addr)
         internal
@@ -705,14 +705,9 @@ contract Bakt is BaktInterface
         // if `id` is 0 then there has been a array full overflow.
         if(id == 0) revert();
 
-        holders[_addr] = Holder ({
-            id : id,
-            lastClaimed : uint80(dividendsTable.length),
-            votingFor : trustee,
-            tokenBalance : 0,
-            etherBalance : 0,
-            votes : 0
-        });
+        holders[_addr].id = id;
+        holders[_addr].lastClaimed = uint80(dividendsTable.length);
+        holders[_addr].votingFor = trustee;
         holderIndex[holders[_addr].id] = _addr;
         NewHolder(_addr);
     }
@@ -723,6 +718,32 @@ contract Bakt is BaktInterface
         onlyTrustee
     {
         acceptingPayments = _accepting;
+    }
+    
+    function issue(address _addr, uint _amount, uint _lotPrice, uint40 _expiry)
+        public
+        canEnter
+        onlyTrustee
+    {
+        // ensure a minimum price to prevent infinate issueing 
+        require(_lotPrice/_amount >= tokenPrice);
+        join(_addr);
+        Holder holder = holders[_addr];
+        holder.offerAmount = _amount;
+        holder.offerPrice = _lotPrice;
+        holder.offerExpiry = _expiry;
+        IssueOffer(_addr);
+    }
+    
+    function revoke(address _addr)
+        public
+        canEnter
+        onlyTrustee
+    {
+        Holder holder = holders[_addr];
+        delete holder.offerAmount;
+        delete holder.offerPrice;
+        delete holder.offerExpiry;
     }
 
 //
@@ -794,43 +815,34 @@ contract Bakt is BaktInterface
 // Token Creation/Destruction Functions
 //
 
-    // For holders to create tokens during a funding round
     function purchase()
         payable
         canEnter
-        isHolder(msg.sender)
         returns (bool)
     {
-        uint __check;
         Holder holder = holders[msg.sender];
-        // no unclaimed dividends
+        require(holder.offerAmount > 0);
+        require(now < holder.offerExpiry);
         require(holder.lastClaimed == dividendsTable.length);
-        
+        require(msg.value == holder.offerPrice);
+
         revoke(holder);
-
-        uint value = holder.etherBalance + msg.value;        
-        uint tokens = value / tokenPrice;
-        uint refund = value - tokens * tokenPrice;
-
-        __check = holder.tokenBalance;
-            holder.tokenBalance += tokens;
-        assert(holder.tokenBalance > __check);
-    
-        committedEther = (committedEther - holder.etherBalance) + refund;
-        assert(committedEther <= this.balance);
         
-        holder.etherBalance = refund;
-        
-        __check = totalSupply;
-            totalSupply += tokens;
-        assert(totalSupply > __check);
+        totalSupply += holder.offerAmount;
+        holder.tokenBalance += holder.offerAmount;
+        TokensCreated(msg.sender, holder.offerAmount);
+
+        delete holder.offerAmount;
+        delete holder.offerPrice;
+        delete holder.offerExpiry;
+
         logDividends(0);
 
-        TokensCreated(msg.sender, tokens);
         revote(holder);
         election();
         return true;
     }
+
 
     // For holders to destroy tokens in return for ether during a redeeming
     // round
@@ -1090,7 +1102,7 @@ contract BaktFactory is Factory
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.2.6-tc-alpha";
+    bytes32 constant public VERSION = "Bakt_Factory v0.3.0";
     
 
 /* Constructor Destructor*/
