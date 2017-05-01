@@ -15,24 +15,25 @@ cannot be held liable for damage or loss.
 Design Notes:
 
 This contract DOES NOT offer trust to its holders. Holders instead elect a
-Trustee from among the holders.
+Trustee from among the holders and the Trustee is responsible for funds.
 
 The Trustee has unilateral powers to:
     - remove funds
     - use the contract to execute code on another contract
-    - set the token price
     - pay dividends
     - add holders
+    - issue a token offer to a holder
     - selfdestruct the contract, on condition of 0 supply and 0 ether balance
+    - veto a transaction
 
 Holders have the power to:
     - vote for a preferred Trustee
-    - veto a transaction
-    - purchase tokens with ether at the token price.
+    - veto a transaction if owned or owns > 10% of tokens
+    - purchase tokens offer with ether.
     - redeem tokens for ether at the token price or a price proportional to
       the fund.
     - withdraw their balance of ether.
-    - Cause a panic state in the contract
+    - Cause a panic state in the contract if holds > 10% of tokens
 
 This contract uses integer tokens so ERC20 `decimalPlaces` is 0.
 
@@ -43,9 +44,8 @@ Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 Breaking changes:
 - extended Holder struct with
         uint offerAmount;
-        uint offerPrice;
         uint offerExpiry;
-- issue(holder, amount, price, period) Creates a time limited offer to a holder to
+- issue(holder, amount) Creates a time limited offer to a holder to
 purchase new tokens. Joins holder if not already a holder.
 - revoke(address) Revokes an oustanding offer.
 - purchase() has changed to only buy tokens on offer to holder.
@@ -53,7 +53,7 @@ purchase new tokens. Joins holder if not already a holder.
 - addHolder(address) added
 - IssueOffer(address) event added
 
-Ropsten: 0.3.0
+Ropsten: 0.3.2
 
 */
 
