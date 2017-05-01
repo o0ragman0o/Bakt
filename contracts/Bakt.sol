@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.3.0-tc-alpha 
-updated:27-Apr-2017
+ver:    0.3.2
+updated:1-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -53,7 +53,7 @@ purchase new tokens. Joins holder if not already a holder.
 - addHolder(address) added
 - IssueOffer(address) event added
 
-Ropsten: 0.3.0-tc-alpha - 0x030f7baf30ebece8a95f892c66c56dd9a293ccd6 - suicided
+Ropsten: 0.3.0
 
 */
 
@@ -75,7 +75,6 @@ contract BaktInterface
         uint etherBalance;
         uint votes;
         uint offerAmount;
-        uint offerPrice;
         uint40 offerExpiry;
         mapping (address => uint) allowances;
     }
@@ -98,15 +97,18 @@ contract BaktInterface
 /* Constants */
 
     uint constant MINGAS = 10000;
+    uint constant TOKENPRICE = 1000000000000000;
+    uint constant MAXTOKENS = 2**128; // prevent multiplication overflows
+    uint constant MAXETHER = 2**128; // prevent multiplication overflows
+
 
 /* State Valiables */
 
     // A mutex used for reentry protection
     bool __reMutex;
-
-    // Blows once _init() is called to prevent further changes to panic and
-    // pending timeLocks
-    bool public __initFuse = true;
+    
+    // Initialisation fuse. Blows on initialisation and used for entry check;
+    bool __initFuse = true;
 
     // Allows the contract to accept or deny payments
     bool public acceptingPayments;
@@ -135,9 +137,6 @@ contract BaktInterface
     /// @return Total count of tokens
     uint public totalSupply;
     
-    /// @return The price at which to purchase tokens
-    uint public tokenPrice = 1000000000000;
-
     /// @return The combined balance of ether committed to holder accounts, 
     /// unclaimed dividends and values in pending transactions.
     uint public committedEther;
@@ -206,8 +205,10 @@ contract BaktInterface
     // Triggered when a holder vacates
     event HolderVacated(address indexed holder);
     
+    // Triggered when a offer of tokens is created
     event IssueOffer(address indexed holder);
-    // Triggered when tokens are created during a funding round
+    
+    // Triggered when tokens are created when an offer is accepted
     event TokensCreated(address indexed holder, uint amount);
     
     // Triggered when tokes are destroyed during a redeeming round
@@ -387,7 +388,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.3.0-tc-alpha";
+    bytes32 constant public VERSION = "Bakt 0.3.2";
 
 //
 // Bakt Functions
@@ -406,7 +407,9 @@ contract Bakt is BaktInterface
     function() 
         payable
     {
-        require(msg.value > 0 && acceptingPayments);
+        require(msg.value > 0 && 
+            msg.value + this.balance < MAXETHER && 
+            acceptingPayments);
         Deposit(msg.value);
     }
     
@@ -424,8 +427,7 @@ contract Bakt is BaktInterface
     
     // One Time Programable shot to set the panic and pending periods.
     // 86400 == 1 day
-    function _init(uint40 _panicPeriodInSeconds,
-        uint40 _pendingPeriodInSeconds)
+    function _init(uint40 _panicPeriodInSeconds, uint40 _pendingPeriodInSeconds)
         onlyTrustee
         returns (bool)
     {
@@ -446,6 +448,17 @@ contract Bakt is BaktInterface
         return this.balance - committedEther;
     }
 
+    // Returns token price constant
+    function tokenPrice()
+        public
+        constant
+        returns (uint)
+    {
+        return TOKENPRICE;
+    }
+
+    // Overloads `changeResource()` from `RegBase` to restrict caller to
+    // `trustee` rather than `owner`
     function changeResource(bytes32 _resource)
         public
         onlyTrustee
@@ -531,13 +544,8 @@ contract Bakt is BaktInterface
         revoke(_to);
 
         // Transfer tokens
-        __check = _from.tokenBalance;
-            _from.tokenBalance -= _amount;
-        assert(_from.tokenBalance < __check);
-        
-        __check = _to.tokenBalance;
-            _to.tokenBalance += _amount;
-        assert(_to.tokenBalance > __check);
+        _from.tokenBalance -= _amount;
+        _to.tokenBalance += _amount;
 
         // Revote accoring to changed token balances
         revote(_from);
@@ -558,6 +566,9 @@ contract Bakt is BaktInterface
         public
         isHolder(msg.sender)
     {
+        // A blocking holder requires at least 10% of tokens
+        require(holders[msg.sender].tokenBalance >= totalSupply / 10);
+
         panicked = true;
         timeToCalm = uint40(now + PANICPERIOD);
         Panicked(msg.sender);
@@ -603,8 +614,7 @@ contract Bakt is BaktInterface
         isHolder(msg.sender)
         returns (bool)
     {
-        uint __check;
-        if (ptxTail == ptxHead) return;
+        if (ptxTail == ptxHead) return; // TX queue is empty
         
         TX memory tx = pendingTxs[ptxTail];
         
@@ -613,25 +623,20 @@ contract Bakt is BaktInterface
         
         if(!tx.blocked) {
             if(tx.to.call.value(tx.value)(tx.data)) {
-                __check = committedEther;
-                    committedEther -= tx.value;
-                assert(committedEther < __check);
-                
+                committedEther -= tx.value;
+
                 Withdrawal(tx.from, tx.to, tx.value);
                 return true;
             }
         }
+        
         // Blocked or failed so revert balances
         if (tx.from == address(this)) {
-            // Was sent from contract balance;
-            __check = committedEther;
-                committedEther -= tx.value;
-            assert(committedEther < __check);
+            // Was sent from fund balance
+            committedEther -= tx.value;
         } else {
             // Was sent from holder ether balance
-            __check = holders[tx.from].etherBalance;
-                holders[tx.from].etherBalance += tx.value;
-            assert(holders[tx.from].etherBalance > __check);
+            holders[tx.from].etherBalance += tx.value;
         }
 
         TransactionFailed(tx.from, tx.to, tx.value);
@@ -640,10 +645,12 @@ contract Bakt is BaktInterface
     // To block a pending transaction
     function blockPendingTx(uint _txIdx)
         public
-        isHolder(msg.sender)
     {
         // Only prevent reentry not entry during panic
         require(!__reMutex);
+        
+        // A blocking holder requires at least 10% of tokens
+        require(holders[msg.sender].tokenBalance >= totalSupply / 10);
         
         pendingTxs[_txIdx].blocked = true;
         TransactionBlocked(msg.sender, _txIdx);
@@ -653,20 +660,18 @@ contract Bakt is BaktInterface
 // Trustee functions
 //
 
-    // For the trustee to send a transaction as the contract
+    // For the trustee to send a transaction as the contract. Returns pending
+    // TX queue index
     function execute(address _to, uint _value, bytes _data)
         public
         canEnter
         onlyTrustee
         returns (uint8)
     {
-        uint __check;
         require(_value <= fundBalance());
 
-        __check= committedEther;
-            committedEther += _value;
-        assert(committedEther >= __check && committedEther <= this.balance);
-        
+        committedEther += _value;
+
         return timeLockSend(address(this), _to, _value, _data);
     }
 
@@ -677,24 +682,11 @@ contract Bakt is BaktInterface
         onlyTrustee
         returns (bool)
     {
-        require(_value <= fundBalance());
-
         logDividends(_value);
         DividendsPaid(totalSupply, _value);
         return true;
     }
 
-    function setTokenPrice(uint _tokenPrice)
-        public
-        canEnter
-        onlyTrustee
-        returns (bool)
-    {
-        require(_tokenPrice >= tokenPrice);
-        tokenPrice = _tokenPrice;
-        return true;
-    }
-    
     function addHolder(address _addr)
         public
         canEnter
@@ -704,7 +696,7 @@ contract Bakt is BaktInterface
         return join(_addr);
     }
     
-    // Creates holder accounts.  Called by addHolders()
+    // Creates holder accounts.  Called by addHolder() and issue()
     function join(address _addr)
         internal
         returns (bool)
@@ -736,29 +728,28 @@ contract Bakt is BaktInterface
         acceptingPayments = _accepting;
     }
     
-    function issue(address _addr, uint _amount, uint _lotPrice, uint40 _expiry)
+    function issue(address _addr, uint _amount)
         public
         canEnter
         onlyTrustee
     {
-        // ensure a minimum price to prevent infinate issueing 
-        require(_lotPrice/_amount >= tokenPrice);
+        // prevent overflows in total supply
+        assert(totalSupply + _amount < MAXTOKENS);
+        
         join(_addr);
         Holder holder = holders[_addr];
         holder.offerAmount = _amount;
-        holder.offerPrice = _lotPrice;
-        holder.offerExpiry = _expiry;
+        holder.offerExpiry = uint40(now + 7 days);
         IssueOffer(_addr);
     }
     
-    function revoke(address _addr)
+    function revokeOffer(address _addr)
         public
         canEnter
         onlyTrustee
     {
         Holder holder = holders[_addr];
         delete holder.offerAmount;
-        delete holder.offerPrice;
         delete holder.offerExpiry;
     }
 
@@ -790,17 +781,14 @@ contract Bakt is BaktInterface
         canEnter
         returns(uint8 pTxId_)
     {
-        uint __check;
         Holder holder = holders[msg.sender];
         // no unclaimed dividends
         require(holder.lastClaimed == dividendsTable.length);
         // has sufficient ether balance
         require(holder.etherBalance >= _value);
         
-        __check = holder.etherBalance;
-          holder.etherBalance -= _value;
-        assert(holder.etherBalance < __check);
-        
+        holder.etherBalance -= _value;
+
         pTxId_ = timeLockSend(msg.sender, msg.sender, _value, "");
     }
 
@@ -837,10 +825,14 @@ contract Bakt is BaktInterface
         returns (bool)
     {
         Holder holder = holders[msg.sender];
+        // offer must exist
         require(holder.offerAmount > 0);
-        require(now < holder.offerExpiry);
+        // offer not expired
+        require(holder.offerExpiry > now);
+        // dividends up to date
         require(holder.lastClaimed == dividendsTable.length);
-        require(msg.value == holder.offerPrice);
+        // correct payment has been sent
+        require(msg.value == holder.offerAmount * TOKENPRICE);
 
         revoke(holder);
         
@@ -849,7 +841,6 @@ contract Bakt is BaktInterface
         TokensCreated(msg.sender, holder.offerAmount);
 
         delete holder.offerAmount;
-        delete holder.offerPrice;
         delete holder.offerExpiry;
 
         logDividends(0);
@@ -868,8 +859,7 @@ contract Bakt is BaktInterface
         isHolder(msg.sender)
         returns (bool)
     {
-        uint __check;
-        uint price;
+        uint redeemPrice;
         uint eth;
         
         Holder holder = holders[msg.sender];
@@ -879,30 +869,21 @@ contract Bakt is BaktInterface
 
         revoke(holder);
 
-        price = fundBalance() / totalSupply;
-        // prevent redeeming above token price which would allow a recyclic 
-        // arbitrage attack (buy back in at a lower price and redeem again)
-        price = price < tokenPrice ? price : tokenPrice;
-        require(price > 0);
-        eth = _amount * price;
-        
-        // uint eth = _amount * fundBalance() / totalSupply;
-        
-        __check = totalSupply;
-            totalSupply -= _amount;
-        assert(totalSupply < __check);
-        
-        __check = holder.tokenBalance;
-            holder.tokenBalance -= _amount;
-        assert(holder.tokenBalance < __check);
+        redeemPrice = fundBalance() / totalSupply;
+        // prevent redeeming above token price which would allow an arbitrage
+        // attack on the fund balance
+        redeemPrice = redeemPrice < TOKENPRICE ? redeemPrice : TOKENPRICE;
 
-        __check = holder.etherBalance;
-            holder.etherBalance += eth;
-        assert(holder.etherBalance > __check);
+        eth = _amount * redeemPrice;
         
-        __check = committedEther;
-            committedEther += eth;
-        assert(committedEther > __check);
+        // will throw if either `amount` or `redeemPRice` are 0
+        require(eth > 0);
+        
+        totalSupply -= _amount;
+        holder.tokenBalance -= _amount;
+        holder.etherBalance += eth;
+        committedEther += eth;
+
         logDividends(0);
         
         TokensDestroyed(msg.sender, _amount);
@@ -950,22 +931,22 @@ contract Bakt is BaktInterface
         internal
         returns (bool)
     {
-        uint __check;
         uint owed;
         uint upto;
         (owed, upto) = dividendsOwing(_holder);
 
         _holder.lastClaimed = uint80(upto);
         
-        __check = _holder.etherBalance;
-            _holder.etherBalance += owed;
-        assert(_holder.etherBalance >= __check);
+        _holder.etherBalance += owed;
+        
+        // may not be up to date if `dividendsOwing()` had to bail on low gas
+        // so return the dividends table index that was reached.
         return dividendsTable.length == upto;
     }
 
     // Calculates the value of dividends owed to the holder since their last 
     // claim.  There is an OOG potential for calculating and claiming dividends
-    // so the function will exit gracefully on low gas and return only the
+    // so the function may exit gracefully on low gas and return only the
     // partial tally of dividends. 
     function dividendsOwing(Holder _holder)
         internal
@@ -993,14 +974,12 @@ contract Bakt is BaktInterface
     function logDividends(uint _value)
         internal
     {
-        uint __check;
+        require(_value < fundBalance());
+        
         if(_value > 0) require(totalSupply > 0);
 
         dividendsTable.push(Dividend({dividend: _value, supply: totalSupply}));
-        
-        __check = committedEther;
-            committedEther += _value;
-        assert(committedEther >= __check && committedEther <= this.balance);
+        committedEther += _value;
     }
     
 //
@@ -1059,9 +1038,7 @@ contract Bakt is BaktInterface
     function revoke(Holder _holder)
         internal
     {
-        uint __check = holders[_holder.votingFor].votes;
-            holders[_holder.votingFor].votes -= _holder.tokenBalance;
-        assert(holders[_holder.votingFor].votes <= __check);
+        holders[_holder.votingFor].votes -= _holder.tokenBalance;
     }
     
     // Places votes with preferred candidate
@@ -1069,9 +1046,7 @@ contract Bakt is BaktInterface
     function revote(Holder _holder)
         internal
     {
-        uint __check = holders[_holder.votingFor].votes;
-            holders[_holder.votingFor].votes += _holder.tokenBalance;
-        assert(holders[_holder.votingFor].votes >= __check);
+        holders[_holder.votingFor].votes += _holder.tokenBalance;
     }
     
 //
@@ -1118,7 +1093,7 @@ contract BaktFactory is Factory
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.3.0-tc-alpha ";
+    bytes32 constant public VERSION = "Bakt_Factory v0.3.2";
     
 
 /* Constructor Destructor*/
