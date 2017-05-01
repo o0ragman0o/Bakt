@@ -34,7 +34,7 @@
 	Use this to send money to this Bakt contract.
 	</div>
 	<form>
-		<input name="ethValue" type="number" placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;'/>
+		<input name="ethValue" type="number" placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;' step="any"/>
 		<input type="submit" />
 	</form>
 </Template>
@@ -44,7 +44,6 @@
 	Withdraw Ether from your holder account.<br>
 	Balance {{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;
 	<form>
-		<input name="withdraw" type="number" placeholder='{{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;' step="any"/>
 		<input type="submit" />
 	</form>
 </Template>
@@ -79,19 +78,28 @@
 	</form>
 </Template>
 
+<Template name="Issue">
+	<h3>Issue a Token Offer</h3>
+	<form oninput="lotPrice.value=parseFloat(amount.value)*parseFloat({{dapp_formatBalance tokenPrice "0,0.000[0000]" "ether"}})">
+		To {{> dapp_addressInput name="account" value=address class="dapp-medium"}}<br>
+		Amount: <input name="amount" type="number" step="1" value="0"><br>
+		Lot Price: <output name="lotPrice"></output>&Xi;<br>
+		Expires: {{expiry}}
+		<input type="submit" value="Place Offer"/>
+	</form>
+</Template>
+
 <Template name="Purchase">
 	<h3>Purchase Tokens</h3>
-	{{#with holder}}
 	<form oninput="total.value=parseFloat(amount.value) * {{dapp_formatBalance price "0,0.00[0000]" "ether"}}">
 		<div>You have an offer to buy<br>
-		{{offerAmount}} tokens <br> 
-		for {{dapp_formatBalance offerPrice "0,0.00[0000]" "ether"}}&Xi; total</div>
+		{{amount}} tokens <br> 
+		for {{dapp_formatBalance price "0,0.00[0000]" "ether"}}&Xi; total</div>
 		<div>Offer expires after <br>
 		{{expiry}}</div>
 		<input type="submit" value="Accept"/>
 		<input type="button" value="Cancel"/>
 	</form>
-	{{/with}}
 </Template>
 
 
@@ -125,18 +133,6 @@
 	</form>
 </Template>
 
-<Template name="Issue">
-	<h3>Issue a Token Offer</h3>
-	<form>
-		To {{> dapp_addressInput name="account" value=address class="dapp-medium"}}<br>
-		Amount: <input name="amount" type="number" step="1"><br>
-		Lot Price: <input name="lotPrice" type="number" minimum='{{dapp_formatBalance minPrice "0,0.00[0000]" "ether"}}'
-			placeholder='{{dapp_formatBalance offerPrice "0,0.00[0000]" "ether"}}' step="any"/>&Xi;<br>
-		Expires: <input name="expiry" type="date"/>
-		<input type="submit" value="Place Offer"/>
-	</form>
-</Template>
-
 <Template name="Revoke">
  <h3>Revoke Offer</h3>
 	<form>
@@ -151,17 +147,6 @@
 		Lot Price: {{dapp_formatBalance price "0,0.00[0000]" "ether"}}&Xi;<br>
 		Expires: {{expiry}}<br>
  		<input type="submit" value="Revoke">
-	</form>
-</Template>
-
-<Template name="SetPrice">
-	<h3>Set Token Price</h3>
-	<form>
-		<label>Token Price</label>
-		The price cannot be lower than the previous price<br>
-		<input name="tokenPrice" type="number" minimum='{{dapp_formatBalance tokenPrice "0,0.00[0000]" "ether"}}' 
-			placeholder='{{dapp_formatBalance tokenPrice "0,0.00[0000]" "ether"}}' step="any"/>
-		<input type="submit" value="Ok" />
 	</form>
 </Template>
 

@@ -331,9 +331,9 @@ contract BaktInterface
     /// @return Returns the holder's withdrawable balance of ether
     function etherBalanceOf(address _addr) constant returns (uint);
 
-    /// @notice Initiate a withdrawal of `_value`
+    /// @notice Initiate a withdrawal of the holder's `etherBalance`
     /// Follow up with sendPending() once the timelock has expired
-    function withdraw(uint _value) returns(uint8);
+    function withdraw() returns(uint8);
 
     /// @notice Vacate holder `_addr`
     /// @param _addr The address of a holder with empty balances.
@@ -650,7 +650,9 @@ contract Bakt is BaktInterface
         require(!__reMutex);
         
         // A blocking holder requires at least 10% of tokens
-        require(holders[msg.sender].tokenBalance >= totalSupply / 10);
+        require(holders[msg.sender].tokenBalance >= totalSupply / 10 ||
+            msg.sender == pendingTxs[ptxTail].from ||
+            msg.sender == trustee);
         
         pendingTxs[_txIdx].blocked = true;
         TransactionBlocked(msg.sender, _txIdx);
@@ -776,7 +778,7 @@ contract Bakt is BaktInterface
     }
 
     // For a holder to initiate a withdrawal from theit ether balance
-    function withdraw(uint _value)
+    function withdraw()
         public
         canEnter
         returns(uint8 pTxId_)
@@ -784,12 +786,8 @@ contract Bakt is BaktInterface
         Holder holder = holders[msg.sender];
         // no unclaimed dividends
         require(holder.lastClaimed == dividendsTable.length);
-        // has sufficient ether balance
-        require(holder.etherBalance >= _value);
-        
-        holder.etherBalance -= _value;
-
-        pTxId_ = timeLockSend(msg.sender, msg.sender, _value, "");
+        pTxId_ = timeLockSend(msg.sender, msg.sender, holder.etherBalance, "");
+        holder.etherBalance = 0;
     }
 
     // To close a holder account
@@ -974,7 +972,7 @@ contract Bakt is BaktInterface
     function logDividends(uint _value)
         internal
     {
-        require(_value < fundBalance());
+        require(_value <= fundBalance());
         
         if(_value > 0) require(totalSupply > 0);
 

@@ -1,5 +1,9 @@
 /* CSS declarations go here */
 
+h1,h2 {
+	margin: 16px;
+}
+
 div {
 	display: block;
 	padding: 2px;
@@ -35,10 +39,23 @@ div.tx{
 	margin: 3px;
 }
 
+div.event{
+	border-radius: 6px;
+	padding: 6px;	
+	margin: 3px;
+	background-color: #eef;
+}
+
 label {
 	display: inline-block;
 	text-transform: uppercase;
 	width: 130px;
+}
+
+label.event {
+	display: inline-block;
+	text-transform: none;
+	width: 100px;
 }
 
 button {
@@ -87,16 +104,16 @@ ul {
 }
 
 .panel {
-   display: -webkit-flex;
-   display: flex;
-   -webkit-align-items: center;
-   align-items: center;
-   -webkit-justify-content: center;
-   justify-content: center;
-   -webkit-flex-flow: column wrap;
-   flex-flow: column wrap;
-   -webkit-align-content: stretch;
-   align-content: stretch;
+	display: -webkit-flex;
+	display: flex;
+	-webkit-align-items: center;
+	align-items: center;
+	-webkit-justify-content: center;
+	justify-content: center;
+	-webkit-flex-flow: column wrap;
+	flex-flow: column wrap;
+	-webkit-align-content: stretch;
+	align-content: stretch;
 
 	padding: 3px;
 	margin: 3px;
@@ -116,7 +133,11 @@ ul {
     box-shadow: 2px 2px 5px #888888;
     border-radius: 3;
 	width: 600px;
+}
 
+.scrollBox {
+	max-height: 500px;
+	overflow-y: scroll;
 }
 
 .panicked {

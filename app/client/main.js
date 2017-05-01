@@ -46,6 +46,7 @@ baktDict = {
 	holder: new ReactiveVar(new BigNumber(0)),
 	pendingTXs: new ReactiveVar(),
 	live: new ReactiveVar(),
+	events: new ReactiveVar([])
 }
 
 update = function () {
@@ -70,8 +71,7 @@ update = function () {
 				etherBalance: arr[4],
 				votes: arr[5],
 		        offerAmount:arr[6],
-		        offerPrice:arr[7],
-		        offerExpiry:arr[8],
+		        offerExpiry:arr[7],
 
 			};
 		}()
@@ -103,12 +103,19 @@ update = function () {
 	);
 }
 
-// liveStatus = function () {
-// 	isLive.set();
-// }
-
-// Tracker.autorun(liveStatus)
-
+eventToString = function (event) {
+	var str = "";
+	console.log(event);
+	keys = Object.keys(event.args);
+	str += event.blockNumber + " ";
+	str += "<strong>" + event.event + "</strong><br>";
+	keys.forEach(function(key) {
+		str += "<label class='event'><i>" + key + "</i></label>";
+		str += event.args[key] + "<br>";
+	})
+	console.log(str);
+	return str;
+}
 
 changeBakt = function (baktAddr) {
 	// delete currentBakt;
@@ -126,6 +133,15 @@ changeBakt = function (baktAddr) {
 			baktDict.baktAddress.set(baktAddr);
 			baktDict.live.set(true);
 			localStorage.setItem("lastBakt", baktAddr);
+			events = currentBakt.allEvents({fromBlock: 0, toBlock: 'latest'});
+			events.watch(function(error, event){
+					if (!error)
+						events = baktDict.events.get();
+						events.push(eventToString(event));
+						baktDict.events.set(events);
+						console.log(event);
+				});
+
 			modalcb();
 			update();
 			oneSec = Meteor.setInterval(update, 1000);

@@ -20,6 +20,14 @@ Template.Holder.helpers({
 		if (baktDict.panicked.get()) return "show";
 		else return "hide";		
 	},
+	canPanic: function () {
+		if (baktDict.holder.get().tokenBalance.gte(baktDict.totalSupply.get().div(10)) ||
+			holderAddr.get() == baktDict.trustee.get())
+			return "show";
+		else 
+			return "hide";
+
+	},
 	canCalm: function () {
 		if (baktDict.panicked.get() &&
 			baktDict.timeToCalm.get().toNumber() * 1000 < Date.now())
@@ -28,7 +36,8 @@ Template.Holder.helpers({
 	},
 
 	calmTime: function () {
-		return new Date(baktDict.timeToCalm.get().toNumber() * 1000)
+		d = new Date(baktDict.timeToCalm.get().toNumber() * 1000);
+		return d.toLocaleString();
 	},
 
 	notPanicked: function () {
@@ -39,6 +48,16 @@ Template.Holder.helpers({
 	hasUnclaimed: function () {
 		if (baktDict.hasUnclaimedDividends.get()) return "show"
 			else return "hide";
+	},
+
+	hasTokens: function () {
+		if (baktDict.holder.get().tokenBalance.gt(0)) return "show"
+			else return "hide";		
+	},
+
+	hasEther: function () {
+		if (baktDict.holder.get().etherBalance.gt(0)) return "show"
+			else return "hide";		
 	},
 
 	noUnclaimed: function () {
@@ -109,9 +128,6 @@ Template.Holder.events({
 	},
 	'click #btn_revoke': function (e, template) {
 		EthElements.Modal.show({template:"Revoke"});
-	},
-	'click #btn_setPrice': function (e, template) {
-		EthElements.Modal.show({template:"SetPrice"});
 	},
 	'click #btn_payDividends': function (e, template) {
 		EthElements.Modal.show({template:"PayDividends"});

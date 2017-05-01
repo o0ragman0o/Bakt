@@ -64,8 +64,7 @@ Template.Withdraw.helpers({
 Template.Withdraw.events({
 	'submit form' (event, tempate) {
 		event.preventDefault();
-		var value = new BigNumber(event.target.children.withdraw.value * Math.pow(10,18));
-		currentBakt.withdraw(value, {from:holderAddr.get(), gas:300000}, modalcb);
+		currentBakt.withdraw(baktDict.holder.get().etherBalance, {from:holderAddr.get(), gas:300000}, modalcb);
 	}
 })
 
@@ -126,24 +125,32 @@ Template.AddHolder.events({
 	}
 })
 
+Template.Issue.rendered = function () {
+	TemplateVar.set("offerAmount", 0);
+}
+
 Template.Issue.helpers({
 	tokenPrice: function () {
 		return baktDict.tokenPrice.get();
-	}
+	},
+	expiry: function () {
+		exp = new Date(Date.now() + 7 * 24 * 3600000)
+		return exp.toLocaleString();
+	},
 })
 
 Template.Issue.events({
 	'change .dapp-address-input input': function(event) {
 		TemplateVar.set("account", event.currentTarget.value);
 	},
+	'change .amount input': function(event) {
+		TemplateVar.set("offerAmount", this.value);
+	},
 	'submit form' (event, template) {
 		event.preventDefault();
 		address = TemplateVar.get("account");
 		amount = event.target.amount.value;
-		lotPrice = event.target.lotPrice.value * Math.pow(10,18);
-		expiry = new Date(event.target.expiry.value);
-		expiry = Math.round(expiry/1000);
-		currentBakt.issue(address, amount, lotPrice, expiry, {from:holderAddr.get(), gas:300000}, modalcb);
+		currentBakt.issue(address, amount, {from:holderAddr.get(), gas:300000}, modalcb);
 	}
 })
 
@@ -159,9 +166,6 @@ Template.Revoke.helpers({
 	},
 	amount: function () {
 		return TemplateVar.get("rHolder").offerAmount;
-	},
-	price: function () {
-		return TemplateVar.get("rHolder").offerPrice;
 	},
 	expiry: function () {
 		d = TemplateVar.get("rHolder").offerExpiry * 1000
@@ -188,8 +192,7 @@ Template.Revoke.rendered = function (){
 				etherBalance: arr[4],
 				votes: arr[5],
 		        offerAmount:arr[6],
-		        offerPrice:arr[7],
-		        offerExpiry:arr[8],
+		        offerExpiry:arr[7],
 			};
 		}()
 	);
@@ -209,8 +212,7 @@ Template.Revoke.events({
 					etherBalance: arr[4],
 					votes: arr[5],
 			        offerAmount:arr[6],
-			        offerPrice:arr[7],
-			        offerExpiry:arr[8],
+			        offerExpiry:arr[7],
 				};
 			}()
 		);
@@ -223,8 +225,11 @@ Template.Revoke.events({
 })
 
 Template.Purchase.helpers({
-	holder: function () {
-		return baktDict.holder.get();
+	amount: function () {
+		return baktDict.holder.get().offerAmount;
+	},
+	price: function () {
+		return baktDict.holder.get().offerAmount * baktDict.tokenPrice.get();
 	},
 	expiry: function () {
 		d = new Date(baktDict.holder.get().offerExpiry * 1000);
@@ -241,7 +246,7 @@ Template.Purchase.helpers({
 Template.Purchase.events({
 	'submit form' (event, template) {
 		event.preventDefault();
-		spend = baktDict.holder.get().offerPrice;
+		spend = baktDict.holder.get().offerAmount.mul(baktDict.tokenPrice.get());
 		currentBakt.purchase({from:holderAddr.get(), value:spend, gas:300000}, modalcb);
 	}
 })
@@ -297,32 +302,6 @@ Template.PayDividends.events({
 	}
 })
 
-Template.SetPrice.helpers({
-	tokenPrice: function () {
-		return currentBakt.tokenPrice();
-	}
-})
-
-Template.SetPrice.events({
-	'submit form' (e, template) {
-		e.preventDefault();
-		price = e.target.children.tokenPrice.value * Math.pow(10,18);
-		console.log(price, holder);
-		currentBakt.setTokenPrice(price,{from:holderAddr.get()}, modalcb);		
-	}
-})
-
-// Template.AddHolder.events({
-// 	'submit form' (e, template) {
-// 		e.preventDefault();
-// 		t = e.target.children[0].children[0];
-// 		holder = t.value;
-// 		console.log(t.value, holder);
-
-// 		currentBakt.addHolders([holder],{from:holderAddr.get()}, modalcb);
-// 	}
-// })
-
 Template.Execute.helpers({
 	fundBalance: function () {
 		return baktDict.fundBalance.get();
@@ -336,7 +315,6 @@ Template.Execute.helpers({
 })
 
 Template.Execute.events({
-	// 'input #to' (e, template) {
 	'change .dapp-address-input input': function(e) {
 		TemplateVar.set("to", TemplateVar.getFrom(e.currentTarget, 'value'));
 	},
@@ -372,7 +350,6 @@ Template.Execute.events({
 			TemplateVar.get("callData") || "",
 			{from:holderAddr.get(), gas:300000}, modalcb);
 	}
-
 })
 
 Template.VoteFor.helpers ({

@@ -11,7 +11,7 @@
 		<!-- <div> -->
 			<div class="{{inPanicked}}">Can calm after: {{calmTime}}</div>
 			<div>
-				<button id="btn_panic" class="">
+				<button id="btn_panic" class="{{canPanic}}">
 					<label>Panic</label>
 				</button>
 				<button id="btn_calm" class="{{canCalm}}">
@@ -20,10 +20,10 @@
 			</div>
 			<div class="{{notPanicked}} {{isHolder}}">
 				<div>
-				<button id="btn_transfer" class="{{noUnclaimed}}">
+				<button id="btn_transfer" class="{{noUnclaimed}} {{hasTokens}}">
 					<label>Transfer</label>
 				</button>
-				<button id="btn_allow" class="{{noUnclaimed}}">
+				<button id="btn_allow" class="{{noUnclaimed}} {{hasTokens}}">
 					<label>Allow</label>
 				</button>
 				<button id="btn_claim" class="{{hasUnclaimed}}">
@@ -34,24 +34,24 @@
 				<button id="btn_purchase" class="{{noUnclaimed}} {{isExpired}}">
 					<label>Purchase</label>
 				</button>
-				<button id="btn_redeem" class="{{noUnclaimed}}">
+				<button id="btn_redeem" class="{{noUnclaimed}} {{hasTokens}}">
 					<label>Redeem</label>
 				</button>
-				<button id="btn_withdraw" class="{{noUnclaimed}}">
+				<button id="btn_withdraw" class="{{noUnclaimed}} {{hasEther}}">
 					<label>Withdraw</label>
 				</button>
 				</div>
 			</div>
 			<div class="{{isTrustee}} {{notPanicked}}">
+				<div>
 				<button id="btn_execute" class="">
 					<label>Execute</label>
 				</button>
 				<button id="btn_payDividends" class="">
 					<label>Pay Dividends</label>
 				</button>
-				<button id="btn_setPrice" class="">
-					<label>Set Price</label>
-				</button>
+				</div>
+				<div>
 				<button id="btn_addHolder" class="">
 					<label>Add Holder</label>
 				</button>
@@ -62,6 +62,7 @@
  				<button id="btn_revoke" class="">
  					<label>Revoke</label> 					
  				</button>
+ 				</div>
  			</div>
 		</div>
 		<div class="foot {{isHolder}}">

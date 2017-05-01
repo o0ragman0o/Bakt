@@ -3,6 +3,7 @@
 	<div class="panel">
 	<h2>Pending Transactions</h2>
 	<button id="btn_send"><label>{{clearSend}}</label></button>
+	<div class="scrollBox">
 	<ul>
 	{{#each pendingTXs}}
 		<li class="state">
@@ -12,15 +13,14 @@
 	</ul>
 	</div>
 	</div>
+	</div>
 </Template>
 
 <Template name="PendingTX">
 		<div class="tx {{sendState}}">	
-			{{#unless blocked}}
-				<button id="btn_block" data="{{ptxid}}">
-					<label><strong>BLOCK</strong></label>
-				</button>
-			{{/unless}}
+			<button id="btn_block" data="{{ptxid}}" class="{{canBlock}}">
+				<label><strong>BLOCK</strong></label>
+			</button>
 			<div>
 				<label>Value</label><strong>{{dapp_formatBalance value "0,0.00[0000]" "ether"}}&Xi;</strong>
 			</div>
