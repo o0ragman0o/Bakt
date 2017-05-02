@@ -53,7 +53,7 @@ purchase new tokens. Joins holder if not already a holder.
 - addHolder(address) added
 - IssueOffer(address) event added
 
-Ropsten: 0.3.2
+Ropsten: 0.3.2_tc_alpha - 0x87b3aaa71c096539f72d9a298adb73c9302a31bf
 
 */
 
