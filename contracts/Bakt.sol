@@ -1,6 +1,6 @@
 /*
 file:   Bakt.sol
-ver:    0.3.2
+ver:    0.3.2_tc_aplha
 updated:1-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
@@ -97,10 +97,10 @@ contract BaktInterface
 /* Constants */
 
     uint constant MINGAS = 10000;
-    uint constant TOKENPRICE = 1000000000000000;
     uint constant MAXTOKENS = 2**128; // prevent multiplication overflows
     uint constant MAXETHER = 2**128; // prevent multiplication overflows
-
+    uint constant TOKENPRICE = 1000000000000000;
+    uint8 public constant decimalPlaces = 15;
 
 /* State Valiables */
 
@@ -236,6 +236,9 @@ contract BaktInterface
 
     /// @return The balance of uncommitted ether funds.
     function fundBalance() constant returns (uint);
+    
+    /// @return The constant TOKENPRICE.
+    function tokenPrice() constant returns (uint);
 
 //
 // ERC20 API functions
@@ -388,7 +391,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.3.2";
+    bytes32 constant public VERSION = "Bakt 0.3.2_tc_alpha";
 
 //
 // Bakt Functions
@@ -1091,7 +1094,7 @@ contract BaktFactory is Factory
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.3.2";
+    bytes32 constant public VERSION = "Bakt_Factory v0.3.2_tc_alpha";
     
 
 /* Constructor Destructor*/

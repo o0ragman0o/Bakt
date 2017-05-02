@@ -1,14 +1,14 @@
 import "./Modals.html";
 
-Template.ChangeBakt.helpers ({
-	isBakt: function () {
-		return TemplateVar.get("isBakt");
-	}
-})
+// Template.ChangeBakt.helpers ({
+// 	isBakt: function () {
+// 		return TemplateVar.get("isBakt");
+// 	}
+// })
 
 Template.ChangeBakt.events ({
 	'change .dapp-address-input input': function(event) {
-		var baktAddr = event.currentTarget.value;
+	var baktAddr = event.currentTarget.value;
 		TemplateVar.set("isBakt", web3.toUtf8(baktContract.at(baktAddr).VERSION()).slice(0,4) == "Bakt");
 		TemplateVar.set("baktAddr", baktAddr);
 	},
@@ -16,7 +16,8 @@ Template.ChangeBakt.events ({
 		event.preventDefault();
 		var addr = TemplateVar.get("baktAddr");
 		modalcb();
-		FlowRouter.go('/' + addr);
+		if (TemplateVar.get("isBakt")) FlowRouter.go('/' + addr);
+		else FlowRouter.go('/');
 	}
 })
 

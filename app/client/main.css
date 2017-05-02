@@ -1,5 +1,13 @@
 /* CSS declarations go here */
 
+.dapp-footer {
+   /*position:fixed;*/
+   left:0px;
+   bottom:0px;
+   height:95px;
+   width: 100%;
+}
+
 h1,h2 {
 	margin: 16px;
 }
@@ -138,6 +146,10 @@ ul {
 .scrollBox {
 	max-height: 500px;
 	overflow-y: scroll;
+}
+
+.events {
+    box-shadow: inset 1px 1px 2px #aaa;
 }
 
 .panicked {
