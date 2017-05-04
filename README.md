@@ -1,11 +1,11 @@
 # BAKT 
-v0.3.2
+v0.3.3
 
 &copy; 2017 Darryl Morris
 
 License: MIT
 
-Ropsten: 0.3.2_tc_alpha @ 0x87b3aaa71c096539f72d9a298adb73c9302a31bf
+Ropsten: 0.3.3_tc_alpha: 0x9224947628dce297a0adf69863fea3974a3fdfc6
 
 ## Exclusive Token Holder Fund Contract
 ```
