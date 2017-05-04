@@ -1,6 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.3.3
+ver:    0.3.3_tc_alpha
+
 updated:4-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
@@ -56,7 +57,7 @@ Breaking changes v0.3.3:
 
 - All publics return at least bool
 
-Ropsten: 0.3.3
+Ropsten: 0.3.3_tc_alpha: 0x9224947628dce297a0adf69863fea3974a3fdfc6
 
 */
 
@@ -1028,7 +1029,7 @@ contract BaktFactory is Factory
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.3.2_tc_alpha";
+    bytes32 constant public VERSION = "Bakt_Factory v0.3.3_tc_alpha";
 
 /* Constructor Destructor*/
 
