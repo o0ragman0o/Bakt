@@ -49,7 +49,7 @@ Holders are explicitly added to the contract by the Trustee and a new holder's v
 ### Token Model
 The token model used is a variable supply in which tokens are created upon `purchase()` of an `issue()` offering and destroyed upon `redeem()` (I have avoided the terms `buy` and `sell` which I use to indicate in other contracts the invariable supply *trading* of tokens).
 
-An 'issue(address, amount, price, expiry)' will create an offer of new tokens to a holder for the constant rate of 1000 tokens/ether
+An `issue(address, amount)` will create an offer of new tokens to a holder for the constant rate of 1000 tokens/ether and which expires within 7 days.
 
 A `purchase()` creates and amount of new tokens from an offer to a holder
 
@@ -98,9 +98,12 @@ In a freshly created contract, the address of the creating account is the *Trust
 ```
 function Bakt(address _creator, bytes32 _regName, address _trustee)
 ```
-A SandalStraps compliant constructor
+A [SandalStraps](https://github.com/o0ragman0o/SandalStraps) compliant constructor
+
 `_creator` The address of the creating contract or account (used by a SandalStraps factory)
+
 `_regName` A unique name in the scope of a SandalStraps registrar
+
 `_trustee` The address of the initial holder (will be msg.sender if blank) 
 
 ### *default*
@@ -146,7 +149,7 @@ Returns the combined balance of ether committed to holder accounts, unclaimed di
 ```
 function tokenPrice() constant returns (uint);
 ```
-return The constant TOKENPRICE.
+Returns the constant TOKENPRICE.
 
 ### trustee
 ```
@@ -165,6 +168,7 @@ A unique name within the scope of a SandalStraps Registrar
 function holders(address);
 ```
 Returns Holder data cast from struct Holder to an array
+
 `address` The address of a holder.
 
 ### holderIndex
@@ -172,6 +176,7 @@ Returns Holder data cast from struct Holder to an array
 function holderIndex(uint) constant returns (address[]);
 ```
 Returns an address of a holder at an index from 1 to 255
+
 `uint8` The index of a holder
 
 ### pendingTxs
@@ -179,6 +184,7 @@ Returns an address of a holder at an index from 1 to 255
 function pendingTxs(uint);
 ```
 Returns transaction details cast from struct TX to array
+
 `uint8` The index of a pending transaction
 
 ### ptxHead
@@ -206,14 +212,17 @@ Return total count of tokens
 function balanceOf(address _addr) constant returns (uint);
 ```
 Returns the ERC20 token balance of the holder
+
 `_addr` The address of a holder
 
 ### transfer
-Transfers an amount of tokens from one registered holder to another
 ```
 function transfer(address _to, uint _amount) returns (bool);
 ```
+Transfers an amount of tokens from one registered holder to another
+
 `_to` the address of a Holder to transfer token to
+
 `_amount` Amount of tokens to transfer
 
 ### transferFrom
@@ -221,8 +230,11 @@ function transfer(address _to, uint _amount) returns (bool);
 function transferFrom(address _from, address _to, uint256 _amount) returns (bool);
 ```
 Transfers tokens from one registered holder to another by an allowed third-party 
+
 `_from` The addres of a holder from which to transfer
+
 `_to` The address of a holder to transfer to
+
 `_amount` The amount of tokens to transfer
 
 ### approve
@@ -230,7 +242,9 @@ Transfers tokens from one registered holder to another by an allowed third-party
 function approve(address _spender, uint256 _amount) returns (bool);
 ```
 Approves a third-party account to transfer an amount of tokens on behalf of the Holder
+
 `_spender` The address of the approved third-party (not restricted to registered holders)
+
 `_amount` The amount which is allowed to be transfered
 
 ### allowance
@@ -238,7 +252,9 @@ Approves a third-party account to transfer an amount of tokens on behalf of the 
 function allowance(address _owner, address _spender) constant returns (uint256);
 ```
 Returns the amount of remaining tokens that an approved thrid-party can send
+
 `_owner` The adddress of the holder owning tokens
+
 `_spender` The address of the account approved to transfer tokens
 
 ## Security Functions
@@ -277,6 +293,7 @@ Execute the first transaction in the pendingTxs queue after it's pending time lo
 function blockPendingTx(uint _txIdx) returns (bool);
 ```
 Allows a holder with >10% to block a pending transaction with the given index.  Transactions can be blocked by any holder at any time but must still be cleared from the pending transactions queue once the time lock has expired.
+
 `_txIdx`  _txIdx Index of the transaction in the pending transactions table.
 
 ## Holder Functions
@@ -285,6 +302,7 @@ Allows a holder with >10% to block a pending transaction with the given index.  
 function vote(address _candidate) returns (bool);
 ```
 Allows a Holder to vote for a preferred Trustee
+
 `_candidate` The address of the preferred holder
 
 ### etherBalanceOf
@@ -292,6 +310,7 @@ Allows a Holder to vote for a preferred Trustee
 function etherBalanceOf(address _addr) constant returns (uint);
 ```
 Returns a holder's withdrawable balance of ether
+
 `_addr` The address of a holder
 
 ### withdraw
@@ -312,6 +331,7 @@ Create tokens from an offer.
 function redeem(uint _amount) returns (bool);
 ```
 Destructively redeems token for their ether value being the lesser of `_amount * fundBalance()/totalSupply` or `_amount / tokenPrice()`
+
 `_amount` The amount of tokens to redeem
 
 ### vacate
@@ -333,8 +353,11 @@ To vacate and deregister a Holder on the conditions that:
 function execute(address _to, uint _value, bytes _data) returns (uint8);
 ```
 Allows the trustee to unilaterally order a transaction *as the contract* and potentially withdraw the entire `fundBalance()`.  Such transactions are held in the pending transactions queue for a period of 1 day during which they may be blocked by any holder.
+
 `_to` The recipient address
+
 `_value` value of ether to send upto a maximum of `fundBalance()`
+
 `_data` the call data to be sent with the transaction.
 
 ### payDividends
@@ -349,6 +372,7 @@ Allows the Trustee to commit an amount of ether from `fundBalance()` to be colle
 function addHolder(address _addrs) returns (bool);
 ```
 Allows the Trustee to register new holder accounts by providing an array of addresses
+
 `_addrs` and array of upto 20 addresses
 
 ### issue
