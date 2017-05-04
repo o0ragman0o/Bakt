@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.3.2_tc_aplha
-updated:1-May-2017
+ver:    0.3.3
+updated:4-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -41,19 +41,22 @@ Maximum number of holders is limited to 254 to prevent potential OOG loops
 during elections.
 Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 
-Breaking changes:
-- extended Holder struct with
-        uint offerAmount;
-        uint offerExpiry;
-- issue(holder, amount) Creates a time limited offer to a holder to
-purchase new tokens. Joins holder if not already a holder.
-- revoke(address) Revokes an oustanding offer.
-- purchase() has changed to only buy tokens on offer to holder.
-- addHolders([]) removed
-- addHolder(address) added
-- IssueOffer(address) event added
+Breaking changes v0.3.3:
+- Refactored dividends calculation to O(1) time to remove loop calculation
+- Removed struct Dividend
+- Removed Dividend[] public dividendsTable;
+- Removed hasUnclaimedDividends(address _addr)
+- Removed claimableDividends()
+- Removed updateDividendsFor(address _addr)
+- changed Holder.lastClaimed from type uint80 to uint
+- changed holder struct packing order
 
-Ropsten: 0.3.2_tc_alpha - 0x87b3aaa71c096539f72d9a298adb73c9302a31bf
+- added uint dividendPoints
+- added uint public totalDividends
+
+- All publics return at least bool
+
+Ropsten: 0.3.3
 
 */
 
@@ -69,21 +72,16 @@ contract BaktInterface
 
     struct Holder {
         uint8 id;
-        uint80 lastClaimed;
         address votingFor;
+        uint40 offerExpiry;
+        uint lastClaimed;
         uint tokenBalance;
         uint etherBalance;
         uint votes;
         uint offerAmount;
-        uint40 offerExpiry;
         mapping (address => uint) allowances;
     }
-    
-    struct Dividend {
-        uint supply;
-        uint dividend;
-    }
-    
+
     struct TX {
         bool blocked;
         uint40 timeLock;
@@ -92,11 +90,13 @@ contract BaktInterface
         uint value;
         bytes data;
     }
-    
+
 
 /* Constants */
 
-    uint constant MINGAS = 10000;
+// TODO Study overflow potential of MAXETHER and MAXTOKENS with 10e18 fixed
+// point math in the dividends calculations
+
     uint constant MAXTOKENS = 2**128; // prevent multiplication overflows
     uint constant MAXETHER = 2**128; // prevent multiplication overflows
     uint constant TOKENPRICE = 1000000000000000;
@@ -106,7 +106,7 @@ contract BaktInterface
 
     // A mutex used for reentry protection
     bool __reMutex;
-    
+
     // Initialisation fuse. Blows on initialisation and used for entry check;
     bool __initFuse = true;
 
@@ -115,63 +115,65 @@ contract BaktInterface
 
     // The period for which a panic will prevent functionality to the contract
     uint40 public PANICPERIOD;
-    
+
     // The period for which a pending transaction must wait before being sent 
     uint40 public TXDELAY;
-    
+
     /// @return The Panic flag state. false == calm, true == panicked
     bool public panicked;
-    
+
     /// @return The pending transaction queue head pointer
     uint8 public ptxHead;
-    
+
     /// @return The pending transaction queue tail pointer
     uint8 public ptxTail;
-    
+
     /// @return The `PANIC` timelock expiry date/time
     uint40 public timeToCalm;
-    
+
     /// @return The Address of the current elected trustee
     address public trustee;
 
     /// @return Total count of tokens
     uint public totalSupply;
-    
+
     /// @return The combined balance of ether committed to holder accounts, 
     /// unclaimed dividends and values in pending transactions.
     uint public committedEther;
 
-    // `regName` A static identifier, set in the constructor and used by
-    // registrars
+    /// @dev The running tally of dividends points accured by 
+    /// dividend/totalSupply at each dividend payment
+    uint dividendPoints;
+
+    /// @return The historic tally of paid dividends
+    uint public totalDividends;
+
+    /// @return A static identifier, set in the constructor and used by
+    /// registrars
     bytes32 public regName;
 
-    // `resource` A informational resource. Can be a sha3 of a string to lookup
-    // in a StringsMap
+    /// @return An informational resource. Can be a sha3 of a string to lookup
+    /// in a StringsMap
     bytes32 public resource;
 
     /// @param address The address of a holder.
     /// @return Holder data cast from struct Holder to an array
     mapping (address => Holder) public holders;
-    
+
     /// @param uint8 The index of a holder
     /// @return An address of a holder
     address[256] public holderIndex;
-    
+
     /// @param uint8 The index of a pending transaction
     /// @return Transaction details cast from struct TX to array
     TX[256] public pendingTxs;
 
-    /// @param uint The index of a dividend payment
-    /// @return Dividend data cast from struct Dividend to array
-    Dividend[] public dividendsTable;
-
-
 /* Events */
 
-    // Triggered when contract recieved a payment
+    // Triggered when the contract recieves a payment
     event Deposit(uint value);
 
-    // Triggered when a ether is sent from the contract
+    // Triggered when ether is sent from the contract
     event Withdrawal(address indexed sender, address indexed recipient,
         uint value);
 
@@ -179,44 +181,44 @@ contract BaktInterface
     event TransactionPending(uint indexed pTX, address indexed sender, 
         address indexed recipient, uint value, uint timeLock);
 
-    // Triggered when a pending transaction is blocked by a holder
+    // Triggered when a pending transaction is blocked
     event TransactionBlocked(address indexed by, uint indexed pTX);
 
     // Triggered when a transaction fails either by being blocked or failure of 
-    // recipt
+    // reciept
     event TransactionFailed(address indexed sender, address indexed recipient,
         uint value);
 
     // Triggered when the trustee pays dividends
-    event DividendsPaid(uint supply, uint value);
-    
+    event DividendPaid(uint value);
+
     // ERC20 transfer notification
     event Transfer(address indexed from, address indexed to, uint value);
-    
+
     // ERC20 approval notification
     event Approval(address indexed owner, address indexed spender, uint value);
-        
+
     // Triggered on change of trustee
     event Trustee(address indexed trustee);
-    
+
     // Trigger when a new holder is added
     event NewHolder(address indexed holder);
-    
+
     // Triggered when a holder vacates
     event HolderVacated(address indexed holder);
-    
+
     // Triggered when a offer of tokens is created
     event IssueOffer(address indexed holder);
-    
-    // Triggered when tokens are created when an offer is accepted
+
+    // Triggered on token creation when an offer is accepted
     event TokensCreated(address indexed holder, uint amount);
-    
-    // Triggered when tokes are destroyed during a redeeming round
+
+    // Triggered when tokens are destroyed during a redeeming round
     event TokensDestroyed(address indexed holder, uint amount);
-    
+
     // Triggered when a hold causes a panic
     event Panicked(address indexed by);
-    
+
     // Triggered when a holder calms a panic
     event Calm();
 
@@ -260,7 +262,7 @@ contract BaktInterface
     /// @param _to the recipient holder's address
     /// @param _amount the number of tokens to transfer
     /// @return success state
-    /// @dev `_from` and `_to` must be an existing holders
+    /// @dev `_from` and `_to` must be existing holders
     function transferFrom(address _from, address _to, uint256 _amount)
         returns (bool);
 
@@ -271,9 +273,9 @@ contract BaktInterface
     function approve(address _spender, uint256 _amount) returns (bool);
 
     /// @param _owner The adddress of the holder owning tokens
-    /// @param _spender The address of the account able to transfer tokens
+    /// @param _spender The address of the account allowed to transfer tokens
     /// @return Amount of remaining token that the _spender can transfer
-    function allowance(address _owner, address _spender) 
+    function allowance(address _owner, address _spender)
         constant returns (uint256);
 
 //
@@ -283,11 +285,11 @@ contract BaktInterface
     /// @notice Cause the contract to Panic. This will block most state changing
     /// functions for a set delay.
     /// Exceptions are `vote()`, `blockPendingTx(uint _txIdx)` and `PANIC()`.
-    function PANIC();
+    function PANIC() returns (bool);
 
-    /// @notice Release the contract from a Panic after the panic period has 
+    /// @notice Release the contract from a Panic after the panic period has
     /// expired.
-    function calm();
+    function calm() returns (bool);
 
     /// @notice Execute the first TX in the pendingTxs queue. Values will
     /// revert if the transaction is blocked or fails.
@@ -299,19 +301,19 @@ contract BaktInterface
     /// is cleared.
     /// @param _txIdx Index of the transaction in the pending transactions
     /// table
-    function blockPendingTx(uint _txIdx);
+    function blockPendingTx(uint _txIdx) returns (bool);
 
 //
 // Trustee functions
 //
 
-    /// @notice Send a transaction to `_to` containing `_value` with
+    /// @notice Send a transaction to `_to` containing `_value` with RLP encoded
     ///     arguments of `_data`
     /// @param _to The recipient address
     /// @param _value value of ether to send
-    /// @param _data data to send with the transaction
-    /// @dev Allows the trustee to initiate a transaction as the DAO. It must be
-    /// followed by sendPending() after the timeLock expires.
+    /// @param _data RLP encoded data to send with the transaction
+    /// @dev Allows the trustee to initiate a transaction as the Bakt. It must
+    /// be followed by sendPending() after the timeLock expires.
     function execute(address _to, uint _value, bytes _data) returns (uint8);
 
     /// @notice Pay dividends of `_value`
@@ -319,16 +321,12 @@ contract BaktInterface
     /// @dev Allows the trustee to commit a portion of `fundBalance` to dividends.
     function payDividends(uint _value) returns (bool);
 
-    // /// @notice Create new holder accounts
-    // /// @param _addrs And array of addresses to create accounts for.
-    // function addHolders(address[] _addrs) returns (bool);
-
 //
 // Holder Functions
 //
 
     /// @return Returns the array of holder addresses.
-    // function getHolders() constant returns(address[256]);
+    function getHolders() constant returns(address[256]);
 
     /// @param _addr The address of a holder
     /// @return Returns the holder's withdrawable balance of ether
@@ -361,43 +359,24 @@ contract BaktInterface
     function redeem(uint _amount) returns (bool);
 
 //
-// Dividend Functions
-//
-
-    /// @return True if holder at `_addr` has unclaimed dividends
-    /// @param _addr The holder address to check
-    function hasUnclaimedDividends(address _addr) constant returns (bool);
-
-    /// @notice Returns the total or partial value of unpaid dividends.
-    /// @param owed_ the amount owed.
-    /// @param at_ dividend table index upto.
-    /// @return The amount owed from last claim upto an index in the dividends
-    /// table
-    function claimableDividends() constant returns (uint owed_, uint at_);
-
-    /// @notice Claim dividends for `_addr`
-    /// @param _addr The address of the holder to claim for
-    /// @return Whether the claim is complete (May need to claim again on false)
-    function updateDividendsFor(address _addr) returns (bool);
-
-//
 // Ballot functions
 //
 
     /// @notice Vote for `_candidate` as preferred Trustee.
     /// @param _candidate The address of the preferred holder
+    /// @return success state
     function vote(address _candidate) returns (bool);
 }
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.3.2_tc_alpha";
+    bytes32 constant public VERSION = "Bakt 0.3.3";
 
 //
 // Bakt Functions
 //
 
-    // SandalStraps complant constructor
+    // SandalStraps compliant constructor
     function Bakt(address _creator, bytes32 _regName, address _trustee)
     {
         regName = _regName;
@@ -406,28 +385,31 @@ contract Bakt is BaktInterface
         join(trustee);
     }
 
-    // Accept payment to the default function
-    function() 
+    // Accept payment to the default function on the condition that
+    // `acceptingPayments` is true
+    function()
         payable
     {
-        require(msg.value > 0 && 
-            msg.value + this.balance < MAXETHER && 
+        require(msg.value > 0 &&
+            msg.value + this.balance < MAXETHER &&
             acceptingPayments);
         Deposit(msg.value);
     }
-    
+
     // Destructor
+    // Selfdestructs on the condition that `totalSupply` and `committedEther`
+    // are 0
     function destroy()
         public
         canEnter
         onlyTrustee
     {
-        require(totalSupply == 0 && committedEther == 0); 
+        require(totalSupply == 0 && committedEther == 0);
         
         delete holders[trustee];
         selfdestruct(msg.sender);
     }
-    
+
     // One Time Programable shot to set the panic and pending periods.
     // 86400 == 1 day
     function _init(uint40 _panicPeriodInSeconds, uint40 _pendingPeriodInSeconds)
@@ -464,9 +446,12 @@ contract Bakt is BaktInterface
     // `trustee` rather than `owner`
     function changeResource(bytes32 _resource)
         public
+        canEnter
         onlyTrustee
+        returns (bool)
     {
         resource = _resource;
+        return true;
     }
 
 //
@@ -504,11 +489,11 @@ contract Bakt is BaktInterface
         returns (bool)
     {
         require(_amount <= holders[_from].allowances[msg.sender]);
-
+        
         Holder from = holders[_from];
         Holder to = holders[_to];
 
-        from.allowances[msg.sender] -= _amount; 
+        from.allowances[msg.sender] -= _amount;
         Transfer(_from, _to, _amount);
         return xfer(from, to, _amount);
     }
@@ -531,16 +516,15 @@ contract Bakt is BaktInterface
     {
         return holders[_owner].allowances[_spender];
     }
-    
+
     // Processes token transfers and subsequent change in voting power
     function xfer(Holder storage _from, Holder storage _to, uint _amount)
         internal
         returns (bool)
     {
-        uint __check;
-        // Ensure holders dividends are up to date
-        require(_from.lastClaimed == dividendsTable.length);
-        require(_to.lastClaimed == dividendsTable.length);
+        // Ensure dividends are up to date at current balances
+        updateDividendsFor(_from);
+        updateDividendsFor(_to);
 
         // Remove existing votes
         revoke(_from);
@@ -568,24 +552,28 @@ contract Bakt is BaktInterface
     function PANIC()
         public
         isHolder(msg.sender)
+        returns (bool)
     {
         // A blocking holder requires at least 10% of tokens
         require(holders[msg.sender].tokenBalance >= totalSupply / 10);
-
+        
         panicked = true;
         timeToCalm = uint40(now + PANICPERIOD);
         Panicked(msg.sender);
+        return true;
     }
-    
+
     // Release the contract from a Panic after the panic period has expired.
     function calm()
         public
         isHolder(msg.sender)
+        returns (bool)
     {
         require(uint40(now) > timeToCalm && panicked);
         
         panicked = false;
         Calm();
+        return true;
     }
 
     // Queues a pending transaction 
@@ -617,23 +605,27 @@ contract Bakt is BaktInterface
         isHolder(msg.sender)
         returns (bool)
     {
-        if (ptxTail == ptxHead) return; // TX queue is empty
+        if (ptxTail == ptxHead) return false; // TX queue is empty
         
         TX memory tx = pendingTxs[ptxTail];
+        if(now < tx.timeLock) return false;
         
-        if(now < tx.timeLock) return;
+        // Have memory cached the TX so deleting store now to prevent any chance
+        // of double spends.
         delete pendingTxs[ptxTail++];
         
         if(!tx.blocked) {
             if(tx.to.call.value(tx.value)(tx.data)) {
+                // TX sent successfully
                 committedEther -= tx.value;
-
+                
                 Withdrawal(tx.from, tx.to, tx.value);
                 return true;
             }
         }
         
-        // Blocked or failed so revert balances
+        // TX is blocked or failed so manually revert balances to pre-pending
+        // state
         if (tx.from == address(this)) {
             // Was sent from fund balance
             committedEther -= tx.value;
@@ -641,26 +633,30 @@ contract Bakt is BaktInterface
             // Was sent from holder ether balance
             holders[tx.from].etherBalance += tx.value;
         }
-
+        
         TransactionFailed(tx.from, tx.to, tx.value);
+        return false;
     }
 
     // To block a pending transaction
     function blockPendingTx(uint _txIdx)
         public
+        returns (bool)
     {
         // Only prevent reentry not entry during panic
         require(!__reMutex);
         
-        // A blocking holder requires at least 10% of tokens
+        // A blocking holder requires at least 10% of tokens or is trustee or
+        // is from own account
         require(holders[msg.sender].tokenBalance >= totalSupply / 10 ||
             msg.sender == pendingTxs[ptxTail].from ||
             msg.sender == trustee);
         
         pendingTxs[_txIdx].blocked = true;
         TransactionBlocked(msg.sender, _txIdx);
+        return true;
     }
-    
+
 //
 // Trustee functions
 //
@@ -676,22 +672,26 @@ contract Bakt is BaktInterface
         require(_value <= fundBalance());
 
         committedEther += _value;
-
         return timeLockSend(address(this), _to, _value, _data);
     }
 
-    // For the trustee to pay an amount of the fund balance to dividends
+    // For the trustee to commit an amount from the fund balance as a dividend
     function payDividends(uint _value)
         public
         canEnter
         onlyTrustee
         returns (bool)
     {
-        logDividends(_value);
-        DividendsPaid(totalSupply, _value);
+        require(_value <= fundBalance());
+        // Calculates dividend as percent of current `totalSupply` in 10e18
+        // fixed point math
+        dividendPoints += 10e18 * _value / totalSupply;
+        totalDividends += _value;
+        committedEther += _value;
         return true;
     }
-
+    
+    // For the trustee to add an address as a holder
     function addHolder(address _addr)
         public
         canEnter
@@ -700,43 +700,49 @@ contract Bakt is BaktInterface
     {
         return join(_addr);
     }
-    
+
     // Creates holder accounts.  Called by addHolder() and issue()
     function join(address _addr)
         internal
         returns (bool)
     {
         if(0 != holders[_addr].id) return true;
-
+        
         require(_addr != address(this));
-
+        
         uint8 id;
-        // Search for the first available slot. 
+        // Search for the first available slot.
         while (holderIndex[++id] != 0) {}
-
+        
         // if `id` is 0 then there has been a array full overflow.
         if(id == 0) revert();
-
-        holders[_addr].id = id;
-        holders[_addr].lastClaimed = uint80(dividendsTable.length);
-        holders[_addr].votingFor = trustee;
-        holderIndex[holders[_addr].id] = _addr;
+        
+        Holder holder = holders[_addr];
+        holder.id = id;
+        holder.lastClaimed = dividendPoints;
+        holder.votingFor = trustee;
+        holderIndex[id] = _addr;
         NewHolder(_addr);
         return true;
     }
-    
+
+    // For the trustee to allow or disallow payments made to the Bakt
     function acceptPayments(bool _accepting)
         public
         canEnter
         onlyTrustee
+        returns (bool)
     {
         acceptingPayments = _accepting;
+        return true;
     }
-    
+
+    // For the trustee to issue an offer of new tokens to a holder
     function issue(address _addr, uint _amount)
         public
         canEnter
         onlyTrustee
+        returns (bool)
     {
         // prevent overflows in total supply
         assert(totalSupply + _amount < MAXTOKENS);
@@ -746,16 +752,20 @@ contract Bakt is BaktInterface
         holder.offerAmount = _amount;
         holder.offerExpiry = uint40(now + 7 days);
         IssueOffer(_addr);
+        return true;
     }
-    
+
+    // For the trustee to revoke an earlier Issue Offer
     function revokeOffer(address _addr)
         public
         canEnter
         onlyTrustee
+        returns (bool)
     {
         Holder holder = holders[_addr];
         delete holder.offerAmount;
         delete holder.offerExpiry;
+        return true;
     }
 
 //
@@ -772,23 +782,24 @@ contract Bakt is BaktInterface
     }
 
     // Returns the holder's withdrawable balance of ether
-    function etherBalanceOf(address _addr) 
+    function etherBalanceOf(address _addr)
         public
         constant
         returns (uint)
     {
-        return holders[_addr].etherBalance;
+        Holder holder = holders[_addr];
+        return holder.etherBalance + dividendsOwing(holder);
     }
 
-    // For a holder to initiate a withdrawal from theit ether balance
+    // For a holder to initiate a withdrawal of their ether balance
     function withdraw()
         public
         canEnter
         returns(uint8 pTxId_)
     {
         Holder holder = holders[msg.sender];
-        // no unclaimed dividends
-        require(holder.lastClaimed == dividendsTable.length);
+        updateDividendsFor(holder);
+        
         pTxId_ = timeLockSend(msg.sender, msg.sender, holder.etherBalance, "");
         holder.etherBalance = 0;
     }
@@ -802,24 +813,25 @@ contract Bakt is BaktInterface
         returns (bool)
     {
         Holder holder = holders[_addr];
-        // Ensure holder account is empty, not the trustee an no pending
-        // transactions or dividends
+        // Ensure holder account is empty, is not the trustee and there are no
+        // pending transactions or dividends
         require(_addr != trustee);
         require(holder.tokenBalance == 0);
         require(holder.etherBalance == 0);
-        require(holder.lastClaimed == dividendsTable.length);
+        require(holder.lastClaimed == dividendPoints);
         require(ptxHead == ptxTail);
-
+        
         delete holderIndex[holder.id];
         delete holders[_addr];
         // NB can't garbage collect holder.allowances mapping
         return (true);
     }
-    
+
 //
 // Token Creation/Destruction Functions
 //
 
+    // For a holder to buy an offer of tokens
     function purchase()
         payable
         canEnter
@@ -830,27 +842,24 @@ contract Bakt is BaktInterface
         require(holder.offerAmount > 0);
         // offer not expired
         require(holder.offerExpiry > now);
-        // dividends up to date
-        require(holder.lastClaimed == dividendsTable.length);
         // correct payment has been sent
         require(msg.value == holder.offerAmount * TOKENPRICE);
-
-        revoke(holder);
         
+        updateDividendsFor(holder);
+                
+        revoke(holder);
+                
         totalSupply += holder.offerAmount;
         holder.tokenBalance += holder.offerAmount;
         TokensCreated(msg.sender, holder.offerAmount);
-
+        
         delete holder.offerAmount;
         delete holder.offerExpiry;
-
-        logDividends(0);
-
+        
         revote(holder);
         election();
         return true;
     }
-
 
     // For holders to destroy tokens in return for ether during a redeeming
     // round
@@ -864,17 +873,17 @@ contract Bakt is BaktInterface
         uint eth;
         
         Holder holder = holders[msg.sender];
-        // no unclaimed dividends
-        require(holder.lastClaimed == dividendsTable.length);
         require(_amount <= holder.tokenBalance);
-
+        
+        updateDividendsFor(holder);
+        
         revoke(holder);
-
+        
         redeemPrice = fundBalance() / totalSupply;
         // prevent redeeming above token price which would allow an arbitrage
         // attack on the fund balance
         redeemPrice = redeemPrice < TOKENPRICE ? redeemPrice : TOKENPRICE;
-
+        
         eth = _amount * redeemPrice;
         
         // will throw if either `amount` or `redeemPRice` are 0
@@ -884,8 +893,6 @@ contract Bakt is BaktInterface
         holder.tokenBalance -= _amount;
         holder.etherBalance += eth;
         committedEther += eth;
-
-        logDividends(0);
         
         TokensDestroyed(msg.sender, _amount);
         revote(holder);
@@ -897,92 +904,23 @@ contract Bakt is BaktInterface
 // Dividend Functions
 //
 
-    // Return whether a holder has unclaimed dividends
-    function hasUnclaimedDividends(address _addr)
-        public
-        constant
-        returns (bool)
-    {
-        return holders[_addr].lastClaimed != dividendsTable.length;
-    }
-    
-    // Return the value of the callers unclaimed dividends
-    function claimableDividends()
-        public
-        constant
-        returns (uint owed_, uint at_)
-    {
-        return dividendsOwing(holders[msg.sender]);
-    }
-    
-    // To claim dividends for a holder
-    function updateDividendsFor(address _addr)
-        public
-        canEnter
-        isHolder(_addr)
-        returns (bool)
-    {
-        return claimDividends(holders[_addr]);
-    }
-    
-    // Awards the holder any outstanding value of paid dividends since their
-    // last claim.  It must be called before any change to their token balance
-    // Returns false on incomplete claim (see `dividendsOwing`)
-    function claimDividends(Holder storage _holder) 
-        internal
-        returns (bool)
-    {
-        uint owed;
-        uint upto;
-        (owed, upto) = dividendsOwing(_holder);
-
-        _holder.lastClaimed = uint80(upto);
-        
-        _holder.etherBalance += owed;
-        
-        // may not be up to date if `dividendsOwing()` had to bail on low gas
-        // so return the dividends table index that was reached.
-        return dividendsTable.length == upto;
-    }
-
-    // Calculates the value of dividends owed to the holder since their last 
-    // claim.  There is an OOG potential for calculating and claiming dividends
-    // so the function may exit gracefully on low gas and return only the
-    // partial tally of dividends. 
-    function dividendsOwing(Holder _holder)
+    function dividendsOwing(Holder storage _holder)
         internal
         constant
-        returns (uint owed_, uint at_)
+        returns (uint _value)
     {
-        uint upto = dividendsTable.length;
-        uint tokens = _holder.tokenBalance;
-        at_ = _holder.lastClaimed;
-        Dividend memory dvnd;
-
-        while (at_ < upto && msg.gas > MINGAS) {
-            dvnd = dividendsTable[at_];
-            if (0 != dvnd.supply)
-                owed_ += (dvnd.dividend * tokens) / dvnd.supply;
-            at_++;
-        }
-        return;
-    }
-
-    // Creates a new entry in dividends table.
-    // A dividend entry records the current totalSupply and a dividend amount.
-    // The dividends table is updated after every change in totalSupply or
-    // dividend payment.
-    function logDividends(uint _value)
-        internal
-    {
-        require(_value <= fundBalance());
-        
-        if(_value > 0) require(totalSupply > 0);
-
-        dividendsTable.push(Dividend({dividend: _value, supply: totalSupply}));
-        committedEther += _value;
+        // Calculates owed dividends in 10e18 fixed point math
+        return (dividendPoints - _holder.lastClaimed) * _holder.tokenBalance/
+            10e18;
     }
     
+    function updateDividendsFor(Holder storage _holder)
+        internal
+    {
+        _holder.etherBalance += dividendsOwing(_holder);
+        _holder.lastClaimed = dividendPoints;
+    }
+
 //
 // Ballot functions
 //
@@ -1004,19 +942,18 @@ contract Bakt is BaktInterface
         election();
         return true;
     }
-    
+
     // Loops through holders to find the holder with most votes and declares
     // them to be the Executive;
     function election()
         internal
-        returns(bool)
     {
         uint max;
         uint winner;
         uint votes;
         uint8 i;
         address addr;
-
+        
         if (0 == totalSupply) return;
         
         while(++i != 0)
@@ -1041,7 +978,7 @@ contract Bakt is BaktInterface
     {
         holders[_holder.votingFor].votes -= _holder.tokenBalance;
     }
-    
+
     // Places votes with preferred candidate
     // required after any adjustments to `tokenBalance` or vote preference.
     function revote(Holder _holder)
@@ -1049,7 +986,7 @@ contract Bakt is BaktInterface
     {
         holders[_holder.votingFor].votes += _holder.tokenBalance;
     }
-    
+
 //
 // Modifiers
 //
@@ -1068,7 +1005,7 @@ contract Bakt is BaktInterface
         require(!(__reMutex || panicked || __initFuse));
         _;
     }
-        
+
     // Blocks if '_addr' is not a holder
     modifier isHolder(address _addr) {
         require(0 != holders[_addr].id);
@@ -1080,22 +1017,18 @@ contract Bakt is BaktInterface
         require(msg.sender == trustee);
         _;
     }
-} 
+}
 
 
 // SandalStraps compliant factory for Bakt
 contract BaktFactory is Factory
 {
-    
     // Live:
-    // Ropsten: v0.2.4-tc-alpha - 0x8FcE7Eae3A1367bCf7FdBfbb0BEf919DC8d92D80
-    // Ropsten: v0.2.6-tc-alpha - 0x388c0d7aac9cd2846b11f7435ebbb6772d645c56
-    
+
 /* Constants */
 
     bytes32 constant public regName = "Bakts";
     bytes32 constant public VERSION = "Bakt_Factory v0.3.2_tc_alpha";
-    
 
 /* Constructor Destructor*/
 
@@ -1106,7 +1039,6 @@ contract BaktFactory is Factory
     }
 
 /* Public Functions */
-
 
     function createNew(bytes32 _regName, address _owner)
         payable
