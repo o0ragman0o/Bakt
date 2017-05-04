@@ -28,6 +28,7 @@ holderAddr.set(EthAccounts.findOne().address);
 ethAccount = new ReactiveVar();
 
 baktDict = {
+	live: new ReactiveVar(),
 	baktAddress: new ReactiveVar(),
 	regName: new ReactiveVar(),
 	version: new ReactiveVar(),
@@ -42,10 +43,8 @@ baktDict = {
 	tokenPrice: new ReactiveVar(new BigNumber(0)),
 	dividend: new ReactiveVar(new BigNumber(0)),
 	trustee: new ReactiveVar(),
-	hasUnclaimedDividends: new ReactiveVar(),
 	holder: new ReactiveVar(new BigNumber(0)),
 	pendingTXs: new ReactiveVar(),
-	live: new ReactiveVar(),
 	events: new ReactiveVar([])
 }
 
@@ -60,19 +59,17 @@ update = function () {
 	baktDict.tokenPrice.set(currentBakt.tokenPrice());
 	baktDict.totalSupply.set(currentBakt.totalSupply());
 	baktDict.trustee.set(currentBakt.trustee());
-	baktDict.hasUnclaimedDividends.set(currentBakt.hasUnclaimedDividends(holderAddr.get()));
 	baktDict.holder.set(function () {
 			arr = currentBakt.holders(holderAddr.get());
 			return {
 				id: arr[0],
-				lastClaimed: arr[1],
-				votingFor: arr[2],
-				tokenBalance: arr[3],
-				etherBalance: arr[4],
-				votes: arr[5],
-		        offerAmount:arr[6],
-		        offerExpiry:arr[7],
-
+				votingFor: arr[1],
+		        offerExpiry:arr[2],
+				lastClaimed: arr[3],
+				tokenBalance: arr[4],
+				etherBalance: currentBakt.etherBalanceOf(holderAddr.get()),
+				votes: arr[6],
+		        offerAmount:arr[7],
 			};
 		}()
 	);

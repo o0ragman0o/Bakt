@@ -45,11 +45,6 @@ Template.Holder.helpers({
 		else return "hide";
 	},
 
-	hasUnclaimed: function () {
-		if (baktDict.hasUnclaimedDividends.get()) return "show"
-			else return "hide";
-	},
-
 	hasTokens: function () {
 		if (baktDict.holder.get().tokenBalance.gt(0)) return "show"
 			else return "hide";		
@@ -60,11 +55,6 @@ Template.Holder.helpers({
 			else return "hide";		
 	},
 
-	noUnclaimed: function () {
-		if (baktDict.hasUnclaimedDividends.get()) return "hide"
-			else return "show";
-	},
-	
 	isTrustee: function () {
 		if(holderAddr.get() == baktDict.trustee.get()) return "show";
 		else return "hide";
@@ -106,10 +96,6 @@ Template.Holder.events({
 	},
 	'click #btn_redeem': function (e, template) {
 		EthElements.Modal.show({template:'Redeem'});
-	},
-	'click #btn_claim': function (e, template) {
-		currentBakt.updateDividendsFor(holderAddr.get(),
-			{from: holderAddr.get(), gas: 300000}, cb)
 	},
 	'click #btn_panic': function (event, template){
 		EthElements.Modal.show({template: 'Panic'});

@@ -89,14 +89,7 @@ Template.Transfer.events({
 		event.preventDefault();
 		var amount = event.target.children.amount.value;
 		var to = event.target.children.addr.value;
-		console.log(to);
-		if (currentBakt.hasUnclaimedDividends(to))
-			currentBakt.updateDividendsFor(to, {from:holderAddr.get(), gas:300000}, cb);
 		currentBakt.transfer(to, amount, {from:holderAddr.get(), gas:300000}, modalcb);
-		// var batch = web3.createBatch();
-		// batch.add(currentBakt.updateDividendsFor.request(to,{from:holderAddr.get(), gas:300000}));
-		// batch.add(currentBakt.transfer.request(to, amount,{from:holderAddr.get(), gas:300000}));
-		// batch.execute();
 	}
 })
 
@@ -187,13 +180,13 @@ Template.Revoke.rendered = function (){
 			arr = currentBakt.holders(addr);
 			return {
 				id: arr[0],
-				lastClaimed: arr[1],
-				votingFor: arr[2],
-				tokenBalance: arr[3],
-				etherBalance: arr[4],
-				votes: arr[5],
-		        offerAmount:arr[6],
-		        offerExpiry:arr[7],
+				votingFor: arr[1],
+		        offerExpiry:arr[2],
+				lastClaimed: arr[3],
+				tokenBalance: arr[4],
+				etherBalance: arr[5],
+				votes: arr[6],
+		        offerAmount:arr[7],
 			};
 		}()
 	);
@@ -207,13 +200,13 @@ Template.Revoke.events({
 				arr = currentBakt.holders(addr);
 				return {
 					id: arr[0],
-					lastClaimed: arr[1],
-					votingFor: arr[2],
-					tokenBalance: arr[3],
-					etherBalance: arr[4],
-					votes: arr[5],
-			        offerAmount:arr[6],
-			        offerExpiry:arr[7],
+					votingFor: arr[1],
+			        offerExpiry:arr[2],
+					lastClaimed: arr[3],
+					tokenBalance: arr[4],
+					etherBalance: arr[5],
+					votes: arr[6],
+			        offerAmount:arr[7],
 				};
 			}()
 		);
@@ -221,7 +214,7 @@ Template.Revoke.events({
 	'submit form' (event, template) {
 		event.preventDefault();
 		address = event.target.children.holders.value
-		currentBakt.revoke(address, {from:holderAddr.get(), gas:300000}, modalcb);		
+		currentBakt.revokeOffer(address, {from:holderAddr.get(), gas:300000}, modalcb);		
 	}
 })
 
