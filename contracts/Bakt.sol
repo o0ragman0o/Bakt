@@ -1,13 +1,12 @@
 /*
 file:   Bakt.sol
-ver:    0.3.3_tc_alpha
-
-updated:4-May-2017
+ver:    0.3.3
+updated:9-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
 Copyright is retained by the author.  Copying or running this software is only
-by express permissions.
+by express permission.
 
 This software is provided WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. The author
@@ -57,7 +56,8 @@ Breaking changes v0.3.3:
 
 - All publics return at least bool
 
-Ropsten: 0.3.3_tc_alpha: 0x9224947628dce297a0adf69863fea3974a3fdfc6
+Ropsten: 0.3.3_tc-alpha: 0x9224947628dce297a0adf69863fea3974a3fdfc6
+Live: 0.3.3_live-alpha:
 
 */
 
@@ -95,11 +95,11 @@ contract BaktInterface
 
 /* Constants */
 
-// TODO Study overflow potential of MAXETHER and MAXTOKENS with 10e18 fixed
-// point math in the dividends calculations
-
-    uint constant MAXTOKENS = 2**128; // prevent multiplication overflows
-    uint constant MAXETHER = 2**128; // prevent multiplication overflows
+    // Constant max tokens and max ether to prevent potential multiplication
+    // overflows in 10e17 fixed point     
+    uint constant MAXTOKENS = 2**128 - 10**18;
+    uint constant MAXETHER = 2**128;
+    uint constant BLOCKPCNT = 10; // 10% holding required to block TX's
     uint constant TOKENPRICE = 1000000000000000;
     uint8 public constant decimalPlaces = 15;
 
@@ -443,7 +443,7 @@ contract Bakt is BaktInterface
         return TOKENPRICE;
     }
 
-    // Overloads `changeResource()` from `RegBase` to restrict caller to
+    // `RegBase` compliant `changeResource()` to restrict caller to
     // `trustee` rather than `owner`
     function changeResource(bytes32 _resource)
         public
@@ -649,7 +649,7 @@ contract Bakt is BaktInterface
         
         // A blocking holder requires at least 10% of tokens or is trustee or
         // is from own account
-        require(holders[msg.sender].tokenBalance >= totalSupply / 10 ||
+        require(holders[msg.sender].tokenBalance >= totalSupply / BLOCKPCNT ||
             msg.sender == pendingTxs[ptxTail].from ||
             msg.sender == trustee);
         
@@ -684,9 +684,9 @@ contract Bakt is BaktInterface
         returns (bool)
     {
         require(_value <= fundBalance());
-        // Calculates dividend as percent of current `totalSupply` in 10e18
+        // Calculates dividend as percent of current `totalSupply` in 10e17
         // fixed point math
-        dividendPoints += 10e18 * _value / totalSupply;
+        dividendPoints += 10**18 * _value / totalSupply;
         totalDividends += _value;
         committedEther += _value;
         return true;
@@ -910,9 +910,9 @@ contract Bakt is BaktInterface
         constant
         returns (uint _value)
     {
-        // Calculates owed dividends in 10e18 fixed point math
+        // Calculates owed dividends in 10e17 fixed point math
         return (dividendPoints - _holder.lastClaimed) * _holder.tokenBalance/
-            10e18;
+            10**18;
     }
     
     function updateDividendsFor(Holder storage _holder)
@@ -1028,8 +1028,8 @@ contract BaktFactory is Factory
 
 /* Constants */
 
-    bytes32 constant public regName = "Bakts";
-    bytes32 constant public VERSION = "Bakt_Factory v0.3.3_tc_alpha";
+    bytes32 constant public regName = "Bakt";
+    bytes32 constant public VERSION = "Bakt Factory v0.3.3";
 
 /* Constructor Destructor*/
 
@@ -1046,6 +1046,7 @@ contract BaktFactory is Factory
         feePaid
         returns (address kAddr_)
     {
+        require(_regName != 0x0);
         kAddr_ = new Bakt(owner, _regName, msg.sender);
         Created(msg.sender, _regName, kAddr_);
     }

@@ -2,8 +2,28 @@
 	<h3>Bakt Address</h3>
 	<form>
 		{{> dapp_addressInput name="bakt" value=address class="dapp-medium"}}
-		<input type="submit" value="OK"/>
-		
+		<input type="submit" value="OK"/>		
+	</form>
+	<p><i>or</i></p>
+	<input type="button" id="btn_newBakt" value="Create a New Bakt" />
+</Template>
+
+<Template name="Factory">
+	<h3>Create A New Bakt</h3>
+	{{> dapp_identicon identity=address class="dapp-tiny"}}{{address}}<br>
+	{{regName}}<br>
+	{{version}}<br>
+	<a href="{{resource}}">{{resource}}</a><br>
+	Creation Fee: {{dapp_formatBalance fee "0,0.00[0000]" "ether"}}&Xi;
+	<div id="accountSelect">From account<br>
+	{{> dapp_selectAccount accounts=accounts class="dapp_small"}}</div>
+	<form>
+		<input name="regName" placeholder="Name"><br>
+		{{#if hasFunds}}
+		<input id="btn_create" type="submit">
+		{{else}}
+		Insufficient funds
+		{{/if}}
 	</form>
 </Template>
 
@@ -14,10 +34,14 @@
 	<strong>This action can only be done once!</strong><br>
 	<form>
 		<label>Tansaction Pending Period</label>
-		<input name="pending" type="number">
+		<input name="pending" type="number" value="172800"><br>
 		<label>Panic Period</label>
-		<input name="panic" type="number">
-		<input type="submit">
+		<input name="panic" type="number" value="172800"><br>
+		{{#if isTrustee}}
+			<input type="submit">
+		{{else}}
+			Could not find controlling account
+		{{/if}}		
 	</form>
 </Template>
 

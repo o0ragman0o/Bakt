@@ -1,5 +1,5 @@
 FlowRouter.route('/', {
-    name: "address",
+    name: "root",
     action: function(params) {
 		EthElements.Modal.show({
 				template: 'ChangeBakt',
@@ -7,22 +7,32 @@ FlowRouter.route('/', {
     }
 });
 
+FlowRouter.route('/create', {
+    name: "create",
+    action: function() {
+        EthElements.Modal.show({
+                template:'Factory',
+        });
+    }
+});
+
 FlowRouter.route('/:baktAddr', {
     name: "address",
     action: function(params) {
-
     	changeBakt(params.baktAddr);
    }
 });
 
-// FlowRouter.route('/:baktAddr/init', {
-// 	name: "init",
-// 	action: function() {
-// 		EthElements.Modal.show({
-// 				template: 'Init',
-// 		});	
-// 	}
-// });
+            // EthElements.Modal.show({template:'Factory'});
+
+FlowRouter.route('/init/:baktAddr', {
+	name: "init",
+	action: function() {
+		EthElements.Modal.show({
+				template: 'Init',
+		});	
+	}
+});
 
 // FlowRouter.notFound = {
 // 	action() {

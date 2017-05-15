@@ -183,6 +183,10 @@ ul {
 	color: #fec;
 }
 
+.pending {
+	cursor: wait;
+}
+
 
 .sk-cube-grid {
   width: 40px;

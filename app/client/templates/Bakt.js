@@ -27,14 +27,18 @@ Template.Bakt.helpers ({
 	},
 	version: function() {
 		return baktDict.version.get();
+	},
+	resource: function() {
+		return baktDict.resource.get();
 	}
 })
 
 Template.Bakt.events ({
 	'click #btn_bakt': function (e, template) {
-		EthElements.Modal.show({
-			template: 'ChangeBakt',
-		});
+		FlowRouter.go('/');
+		// EthElements.Modal.show({
+		// 	template: 'ChangeBakt',
+		// });
 	},
 	'click #btn_payInto': function (e, template) {
 		EthElements.Modal.show({

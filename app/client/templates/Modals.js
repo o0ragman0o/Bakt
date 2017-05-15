@@ -12,21 +12,118 @@ Template.ChangeBakt.events ({
 		TemplateVar.set("isBakt", web3.toUtf8(baktContract.at(baktAddr).VERSION()).slice(0,4) == "Bakt");
 		TemplateVar.set("baktAddr", baktAddr);
 	},
+	'click #btn_newBakt': function(event) {
+			FlowRouter.go('/create');
+	},
 	'submit form' (event, template) {
 		event.preventDefault();
 		var addr = TemplateVar.get("baktAddr");
-		modalcb();
-		if (TemplateVar.get("isBakt")) FlowRouter.go('/' + addr);
+		EthElements.Modal.hide();
+		if (TemplateVar.get("isBakt")) FlowRouter.go(`/${addr}`);
 		else FlowRouter.go('/');
 	}
 })
 
+Template.Factory.helpers ({
+
+	accounts: function () {
+		return EthAccounts.findAll().fetch();
+	},
+	address: function () {
+		return currentFactory.address;
+	},
+	fee: function () {
+		return factoryDict.owner.get() == holderAddr.get() ?
+			0 :
+			factoryDict.fee.get();
+	},
+	version: function () {
+		return factoryDict.version.get();
+	},
+	resource: function () {
+		return factoryDict.resource.get();
+	},
+	regName: function () {
+		return factoryDict.regName.get();
+	},
+	holderAddr: function() {
+		return holderAddr.get();
+	},
+	isOwner: function() {
+		return factoryDict.owner.get() == holderAddr.get();
+	},
+	kBalance: function() {
+		return web3.eth.getBalanceOf(currentFactory.address);
+	},
+	hasFunds: function() {
+		return web3.eth.getBalance(holderAddr.get()) > factoryDict.fee.get().plus(web3.eth.gasPrice.mul(3652256)).toNumber();
+	}
+})
+
+Template.Factory.events ({
+	'change .dapp-select-account select': function(e) {
+	    holderAddr.set(TemplateVar.getFrom(e.currentTarget, 'value'));
+	},
+	'submit form': function(e) {
+		event.preventDefault();
+		let name = e.currentTarget.children.regName.value;
+
+		currentFactory.createNew(name, holderAddr.get(), {from: holderAddr.get(), gas: 3652256},
+			function (e, tx) {
+				pending.set('pending');
+				console.log(e,tx);
+				// tx = web3.eth.getTransaction(tx);
+				currentFactory.Created().watch(
+					function (e, log) {
+						if(!e) {
+							console.log(e,log);
+							currentFactory.Created().stopWatching();
+							address = log.args._address;
+							pending.set();
+							FlowRouter.go(`/${address}`);
+						} else {
+							console.log(e);
+						}
+					}
+				);
+			}
+		);
+	}
+})
+
+Template.Init.helpers ({
+	isTrustee: function () {
+		accounts = web3.eth.accounts;
+		trustee = currentBakt.trustee();
+		for (a in accounts) {
+			if (accounts[a] == trustee) return true;
+		}
+	}
+})
 Template.Init.events ({
-	'submit form' (event, template) {
-		var pending = event.target.children.pending.value;
+	'submit form' (event) {
+		event.preventDefault();
+		var txp = event.target.children.pending.value;
 		var panic = event.target.children.panic.value;
-		console.log(pending,panic);
-		currentBakt.__init(pending, panic,{from:holderAddr.get(), gas:90000}, modalcb);
+		var trustee = currentBakt.trustee();
+		console.log(txp,panic);
+		currentBakt._init(txp, panic,{from:trustee, gas:90000}, 
+			function (e, tx) {
+				pending.set('pending');
+				console.log(e,tx);
+				itvlId = setInterval(
+					function (){
+						console.log('tick');
+						if(web3.eth.getTransactionReceipt(tx)) {
+							clearInterval(itvlId);
+							pending.set();
+							FlowRouter.go(`/${currentBakt.address}`);
+						}
+					},
+					1000);
+				console.log(itvlId);
+			}
+		);
 	}
 })
 
@@ -104,7 +201,7 @@ Template.Allow.events({
 		event.preventDefault();
 		sender = event.target.children[1].children[0].value;
 		amount = event.target.amount.value;
-		currentBakt.approve(sender, amount,{from:holderAddr.get(), gas:90000}, modalcb);
+		currentBakt.approve(sender, amount,{from:holderAddr.get(), gas:10000}, modalcb);
 	}
 })
 
@@ -115,7 +212,7 @@ Template.AddHolder.events({
 		holder = t.value;
 		console.log(t.value, holder);
 
-		currentBakt.addHolder(holder,{from:holderAddr.get()}, modalcb);
+		currentBakt.addHolder(holder,{from:holderAddr.get(), gas:100000}, modalcb);
 	}
 })
 
