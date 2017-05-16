@@ -1,11 +1,11 @@
 # BAKT 
-v0.3.3
+v0.3.4
 
 &copy; 2017 Darryl Morris
 
 License: MIT
 
-Ropsten: 0.3.3_tc_alpha: 0x9224947628dce297a0adf69863fea3974a3fdfc6
+Ropsten: 0.3.4-beta
 
 ## Exclusive Token Holder Fund Contract
 ```
@@ -86,12 +86,25 @@ A followup call to `sendPending()` will execute the oldest transaction in the pe
 
 An additional `PANIC()` mechanism can be enacted to block most state mutating functions of the contract panic period set during initialisation. The exceptions are `vote()` `block()` and `PANIC()`. This should only be called if there is serious behavioural problems with the contract or the trustee.  It is intended to allow time for the holders to be notified and vote for a different trustee.
 
+## Deployment
+Bakts can be created by calling `createNew(<name>, <owner>)` of a deployed **BaktFactory** contract. Bakt factories have been deployed at:
+
+Live: [`0xc7c11eb6983787f7aa0c20abeeac8101cf621e47`](https://etherscan.io/address/0xc7c11eb6983787f7aa0c20abeeac8101cf621e47)
+
+Ropsten: [`0x19124dbab3fcba78b8d240ed2f2eb87654e252d4`](https://ropsten.etherscan.io/address/0x19124dbab3fcba78b8d240ed2f2eb87654e252d4)
+
+Rinkeby: [`0xd0198d2a9c2e4474bcbe5514b196cb367d5da790`](https://rinkeby.etherscan.io/address/0xd0198d2a9c2e4474bcbe5514b196cb367d5da790)
+
 ## Setup
 The Bakt contract can be operated from an Ethereum wallet such as *Parity* or *Mist* by selecting `Watch Contracts` and filling in the details and ABI.
 
-The contract must be initialised by calling the function `_init(_panicPeriodISeconds, _pendingPeriodInSeconds)`.
-In a freshly created contract, the address of the creating account is the *Trustee* and can add new holders with a call to `addHolder(address)` or 'issue(address, amount)'
+A newly deployed contract must be initialised by calling the function `_init(_panicPeriodISeconds, _pendingPeriodInSeconds)`.
+The address of the creating account is the *Trustee* and can add new holders with a call to `addHolder(address)` or 'issue(address, amount)'
 
+## GUI
+
+A Meteor driven GUI is provided to make creation and interaction with Bakts simpler and resides in the `/app` subdirectory of this repository.
+This GUI can also create new Bakts.
 
 ## Bakt Functions
 ### *Constructor*
