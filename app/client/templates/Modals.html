@@ -10,7 +10,8 @@
 
 <Template name="Factory">
 	<h3>Create A New Bakt</h3>
-	{{> dapp_identicon identity=address class="dapp-tiny"}}{{address}}<br>
+	{{> dapp_identicon identity=address class="dapp-tiny"}}
+	<a href="https://{{network}}etherscan.io/address/{{address}}">{{address}}</a><br>
 	{{regName}}<br>
 	{{version}}<br>
 	<a href="{{resource}}">{{resource}}</a><br>

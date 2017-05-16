@@ -33,9 +33,9 @@ Template.Factory.helpers ({
 		return currentFactory.address;
 	},
 	fee: function () {
-		return factoryDict.owner.get() == holderAddr.get() ?
+		return currentFactory.owner() == holderAddr.get() ?
 			0 :
-			factoryDict.fee.get();
+			currentFactory.value();
 	},
 	version: function () {
 		return factoryDict.version.get();
@@ -57,7 +57,10 @@ Template.Factory.helpers ({
 	},
 	hasFunds: function() {
 		return web3.eth.getBalance(holderAddr.get()) > factoryDict.fee.get().plus(web3.eth.gasPrice.mul(3652256)).toNumber();
-	}
+	},
+	network: function() {
+		return ["","","morden.","ropsten.","rinkeby."][web3.version.network];
+	},
 })
 
 Template.Factory.events ({
@@ -67,8 +70,13 @@ Template.Factory.events ({
 	'submit form': function(e) {
 		event.preventDefault();
 		let name = e.currentTarget.children.regName.value;
+		// The fee is not paid by the factory owner
+		let fee = currentFactory.owner() == holderAddr.get() ?
+			0 :
+			currentFactory.value();
 
-		currentFactory.createNew(name, holderAddr.get(), {from: holderAddr.get(), gas: 3652256},
+		currentFactory.createNew(name, holderAddr.get(),
+			{from: holderAddr.get(), value:fee, gas: 3652256},
 			function (e, tx) {
 				pending.set('pending');
 				console.log(e,tx);

@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.3.3
-updated:9-May-2017
+ver:    0.3.4-beta
+updated:16-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -41,23 +41,12 @@ Maximum number of holders is limited to 254 to prevent potential OOG loops
 during elections.
 Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 
-Breaking changes v0.3.3:
-- Refactored dividends calculation to O(1) time to remove loop calculation
-- Removed struct Dividend
-- Removed Dividend[] public dividendsTable;
-- Removed hasUnclaimedDividends(address _addr)
-- Removed claimableDividends()
-- Removed updateDividendsFor(address _addr)
-- changed Holder.lastClaimed from type uint80 to uint
-- changed holder struct packing order
+Release Notes v0.3.4-beta:
+-fixed magnitude bug introduced when using scientific notation (10**18 != 10e18)
+-using 10**18 notation rather than 1e18 as already using 2**256 notation
+-Deploy factory to Ropsten, Rinkeby and Live 
 
-- added uint dividendPoints
-- added uint public totalDividends
-
-- All publics return at least bool
-
-Ropsten: 0.3.3_tc-alpha: 0x9224947628dce297a0adf69863fea3974a3fdfc6
-Live: 0.3.3_live-alpha:
+Ropsten: 0.3.4-beta-test1 @ 0xc446575f7ed13f7b4b849f70ffa9f209a64db742
 
 */
 
@@ -371,7 +360,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.3.3";
+    bytes32 constant public VERSION = "Bakt 0.3.4-beta";
 
 //
 // Bakt Functions
@@ -1024,12 +1013,16 @@ contract Bakt is BaktInterface
 // SandalStraps compliant factory for Bakt
 contract BaktFactory is Factory
 {
-    // Live:
+    // Live: 0xc7c11eb6983787f7aa0c20abeeac8101cf621e47
+    // Ropsten: 0xda33129464688b7bd752ce64e9ed6bca65f44902 (could not verify),
+    //          0x19124dbab3fcba78b8d240ed2f2eb87654e252d4 (verified)
+    //
+    // Rinkeby: 0xd0198d2a9c2e4474bcbe5514b196cb367d5da790
 
 /* Constants */
 
     bytes32 constant public regName = "Bakt";
-    bytes32 constant public VERSION = "Bakt Factory v0.3.3";
+    bytes32 constant public VERSION = "Bakt Factory v0.3.4-beta";
 
 /* Constructor Destructor*/
 

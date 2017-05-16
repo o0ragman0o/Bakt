@@ -9,6 +9,8 @@ isLive = new ReactiveVar();
 holderAddr = new ReactiveVar();
 holderAddr.set(EthAccounts.findOne().address);
 ethAccount = new ReactiveVar();
+title = new ReactiveVar("Bakt");
+document.title = title.get();
 
 cb = function(error, result) {
 	if(!error) {
