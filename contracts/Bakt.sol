@@ -51,6 +51,9 @@ Release Notes v0.3.5-beta:
 - added trustee function: withdrawFor(address _addr, uint _value) returns (bool);
 - Destroy with committedEther < 1,000,000,000 due to rounding error accumulation
 
+
+Factory Deployedments:
+Rinkeby: 0x0c49a7bd2cf4db5c00258a79e0561b854f4b61fd
 */
 
 import "https://github.com/o0ragman0o/Withdrawable/contracts/WithdrawableInterface.sol";

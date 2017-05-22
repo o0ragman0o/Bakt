@@ -1,15 +1,15 @@
 # BAKT 
-v0.3.4
+v0.3.5
 
 &copy; 2017 Darryl Morris
 
 License: MIT
 
-Ropsten: 0.3.4-beta
+Ropsten: 0.3.5-beta
 
 ## Exclusive Token Holder Fund Contract
 ```
-[{"constant":false,"inputs":[{"name":"_resource","type":"bytes32"}],"name":"changeResource","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"ptxHead","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"etherBalanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"holders","outputs":[{"name":"id","type":"uint8"},{"name":"votingFor","type":"address"},{"name":"offerExpiry","type":"uint40"},{"name":"lastClaimed","type":"uint256"},{"name":"tokenBalance","type":"uint256"},{"name":"etherBalance","type":"uint256"},{"name":"votes","type":"uint256"},{"name":"offerAmount","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"timeToCalm","outputs":[{"name":"","type":"uint40"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"regName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"acceptingPayments","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"resource","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"fundBalance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"withdraw","outputs":[{"name":"pTxId_","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"calm","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"committedEther","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getHolders","outputs":[{"name":"","type":"address[256]"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"purchase","outputs":[{"name":"","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"pendingTxs","outputs":[{"name":"blocked","type":"bool"},{"name":"timeLock","type":"uint40"},{"name":"from","type":"address"},{"name":"to","type":"address"},{"name":"value","type":"uint256"},{"name":"data","type":"bytes"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"payDividends","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_txIdx","type":"uint256"}],"name":"blockPendingTx","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_candidate","type":"address"}],"name":"vote","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"PANICPERIOD","outputs":[{"name":"","type":"uint40"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_accepting","type":"bool"}],"name":"acceptPayments","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"tokenPrice","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"destroy","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"},{"name":"_amount","type":"uint256"}],"name":"issue","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"panicked","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalDividends","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"sendPending","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"}],"name":"addHolder","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"holderIndex","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"ptxTail","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"},{"name":"_data","type":"bytes"}],"name":"execute","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"TXDELAY","outputs":[{"name":"","type":"uint40"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"}],"name":"revokeOffer","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"redeem","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"}],"name":"vacate","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"decimalPlaces","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"PANIC","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_panicPeriodInSeconds","type":"uint40"},{"name":"_pendingPeriodInSeconds","type":"uint40"}],"name":"_init","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"trustee","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"VERSION","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"inputs":[{"name":"_creator","type":"address"},{"name":"_regName","type":"bytes32"},{"name":"_trustee","type":"address"}],"payable":false,"type":"constructor"},{"payable":true,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":false,"name":"value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":true,"name":"recipient","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Withdrawal","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"pTX","type":"uint256"},{"indexed":true,"name":"sender","type":"address"},{"indexed":true,"name":"recipient","type":"address"},{"indexed":false,"name":"value","type":"uint256"},{"indexed":false,"name":"timeLock","type":"uint256"}],"name":"TransactionPending","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"by","type":"address"},{"indexed":true,"name":"pTX","type":"uint256"}],"name":"TransactionBlocked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":true,"name":"recipient","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"TransactionFailed","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"value","type":"uint256"}],"name":"DividendPaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"trustee","type":"address"}],"name":"Trustee","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"NewHolder","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"HolderVacated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"IssueOffer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"},{"indexed":false,"name":"amount","type":"uint256"}],"name":"TokensCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"},{"indexed":false,"name":"amount","type":"uint256"}],"name":"TokensDestroyed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"by","type":"address"}],"name":"Panicked","type":"event"},{"anonymous":false,"inputs":[],"name":"Calm","type":"event"}]
+[{"constant":false,"inputs":[{"name":"_resource","type":"bytes32"}],"name":"changeResource","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"ptxHead","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"etherBalanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"holders","outputs":[{"name":"id","type":"uint8"},{"name":"votingFor","type":"address"},{"name":"offerExpiry","type":"uint40"},{"name":"lastClaimed","type":"uint256"},{"name":"tokenBalance","type":"uint256"},{"name":"etherBalance","type":"uint256"},{"name":"votes","type":"uint256"},{"name":"offerAmount","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"timeToCalm","outputs":[{"name":"","type":"uint40"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"regName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"acceptingPayments","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"withdraw","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"resource","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"fundBalance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"calm","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"committedEther","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getHolders","outputs":[{"name":"","type":"address[256]"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"purchase","outputs":[{"name":"","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"pendingTxs","outputs":[{"name":"blocked","type":"bool"},{"name":"timeLock","type":"uint40"},{"name":"from","type":"address"},{"name":"to","type":"address"},{"name":"value","type":"uint256"},{"name":"data","type":"bytes"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"payDividends","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_txIdx","type":"uint256"}],"name":"blockPendingTx","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_candidate","type":"address"}],"name":"vote","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"PANICPERIOD","outputs":[{"name":"","type":"uint40"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_accepting","type":"bool"}],"name":"acceptPayments","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"tokenPrice","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"destroy","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"},{"name":"_amount","type":"uint256"}],"name":"issue","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"panicked","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalDividends","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"sendPending","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"}],"name":"addHolder","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"holderIndex","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"ptxTail","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"},{"name":"_data","type":"bytes"}],"name":"execute","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"TXDELAY","outputs":[{"name":"","type":"uint40"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"}],"name":"revokeOffer","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"redeem","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"},{"name":"_amount","type":"uint256"}],"name":"withdrawFor","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_addr","type":"address"}],"name":"vacate","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"decimalPlaces","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"PANIC","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_panicPeriodInSeconds","type":"uint40"},{"name":"_pendingPeriodInSeconds","type":"uint40"}],"name":"_init","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"trustee","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"VERSION","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"inputs":[{"name":"_creator","type":"address"},{"name":"_regName","type":"bytes32"},{"name":"_trustee","type":"address"}],"payable":false,"type":"constructor"},{"payable":true,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":false,"name":"state","type":"bool"}],"name":"AcceptingPayments","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":true,"name":"recipient","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Withdrawal","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"pTX","type":"uint256"},{"indexed":true,"name":"sender","type":"address"},{"indexed":true,"name":"recipient","type":"address"},{"indexed":false,"name":"value","type":"uint256"},{"indexed":false,"name":"timeLock","type":"uint256"}],"name":"TransactionPending","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"by","type":"address"},{"indexed":true,"name":"pTX","type":"uint256"}],"name":"TransactionBlocked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":true,"name":"recipient","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"TransactionFailed","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"value","type":"uint256"}],"name":"DividendPaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"trustee","type":"address"}],"name":"Trustee","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"NewHolder","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"HolderVacated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"IssueOffer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"}],"name":"OfferRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"},{"indexed":false,"name":"amount","type":"uint256"}],"name":"TokensCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"holder","type":"address"},{"indexed":false,"name":"amount","type":"uint256"}],"name":"TokensDestroyed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"by","type":"address"}],"name":"Panicked","type":"event"},{"anonymous":false,"inputs":[],"name":"Calm","type":"event"}]
 ```
 
 **Bakt** is a *payable* and *dividends paying* Ethereum contract in which ERC20 token holders elect a single holder as *Trustee* to manage the fund.  It may be suitable for private investor groups of up to 255 members who have *pre-established trust arrangements*. It **does not** enforce trust in the trustee.
@@ -29,6 +29,7 @@ Ropsten: 0.3.4-beta
 * Allows the *Trustee* to add new holders.
 * Allows the *Trustee* to pay dividends to the *Holders*.
 * Allows the *Trustee* to *unilaterally* order the withdrawal of uncommitted funds.
+* Allows the *Trustee* to destroy the contract on the condition of 0 supply and 0 committed ether
 * Allows *Holders* to order the withdrawal of their balance of *ether*.
 * Prevents *pending transactions* from being sent until after a set delay.
 * Allows a holder with greater than 10% of tokens to *block* a *pending transaction*.
@@ -89,11 +90,11 @@ An additional `PANIC()` mechanism can be enacted to block most state mutating fu
 ## Deployment
 Bakts can be created by calling `createNew(<name>, <owner>)` of a deployed **BaktFactory** contract. Bakt factories have been deployed at:
 
-Live: [`0xc7c11eb6983787f7aa0c20abeeac8101cf621e47`](https://etherscan.io/address/0xc7c11eb6983787f7aa0c20abeeac8101cf621e47)
+Live: []()
 
-Ropsten: [`0x19124dbab3fcba78b8d240ed2f2eb87654e252d4`](https://ropsten.etherscan.io/address/0x19124dbab3fcba78b8d240ed2f2eb87654e252d4)
+Ropsten: []()
 
-Rinkeby: [`0xd0198d2a9c2e4474bcbe5514b196cb367d5da790`](https://rinkeby.etherscan.io/address/0xd0198d2a9c2e4474bcbe5514b196cb367d5da790)
+Rinkeby: [`0x0c49a7bd2cf4db5c00258a79e0561b854f4b61fd`](https://rinkeby.etherscan.io/address/0x0c49a7bd2cf4db5c00258a79e0561b854f4b61fd)
 
 ## Setup
 The Bakt contract can be operated from an Ethereum wallet such as *Parity* or *Mist* by selecting `Watch Contracts` and filling in the details and ABI.
@@ -328,10 +329,37 @@ Returns a holder's withdrawable balance of ether
 
 ### withdraw
 ```
-function withdraw() returns (uint8);
+function withdraw(uint _value) returns (bool);
 ```
 Initiate a withdrawal from the Holder's etherBalance. It must be followed up with `sendPending()` once the time lock has expired.
-Returns the pending TX index.
+
+`_value` The value in ether to be withdrawn.
+
+Returns success.
+
+### withdrawFor
+```
+function withdrawFor(address _addr uint _value) returns (bool);
+```
+Initiate a withdrawal from a Holder's etherBalance to their etherum account. It must be followed up with `sendPending()` once the time lock has expired.
+
+`_addr` The address of a holder
+
+`_value` The value in ether to be withdrawn.
+
+Returns success
+
+### withdrawFrom
+```
+function withdrawFrom(uint _value) returns (bool);
+```
+Calls `withdraw(_value)` of an external contract in which the Bakt instance may have a balance of value.
+
+`_addr` The address of an external contract.
+
+`_value` The value in ether to be withdrawn.
+
+Returns success
 
 ### purchase
 ```
@@ -345,7 +373,9 @@ function redeem(uint _amount) returns (bool);
 ```
 Destructively redeems token for their ether value being the lesser of `_amount * fundBalance()/totalSupply` or `_amount / tokenPrice()`
 
-`_amount` The amount of tokens to redeem
+`_amount` The amount of tokens to redeem.
+
+Returns success
 
 ### vacate
 ```
@@ -356,7 +386,6 @@ To vacate and deregister a Holder on the conditions that:
 * their token balance is 0
 * their ether balance is 0
 * there are no pending transactions
-* the account is up to date with the dividends table
 
 `_addr` The address of a holder to vacate.
 
@@ -378,102 +407,127 @@ Allows the trustee to unilaterally order a transaction *as the contract* and pot
 function payDividends(uint _value) returns (bool);
 ```
 Allows the Trustee to commit an amount of ether from `fundBalance()` to be collected by the holders in proportion to their token holdings.
-`_value` An amount of ether to be distributed to holders
+
+`_value` An amount of ether to be distributed to holders.
 
 ### addHolder
 ```
 function addHolder(address _addrs) returns (bool);
 ```
-Allows the Trustee to register new holder accounts by providing an array of addresses
+Allows the Trustee to register new holder accounts by providing an array of addresses.
 
-`_addrs` and array of upto 20 addresses
+`_addrs` and array of upto 20 addresses.
 
 ### issue
 ```
 function issue(address _addr, uint _amount) returns (bool);
 ```
-Issues a token offer to a potential or existing holder. The offer expires within 7 days
+Issues a token offer to a potential or existing holder. The offer expires within 7 days.
+
+`_addr` The address of a holder to who an offer will be made.
+
+`_amount` The amount of tokens to be created in the offer.
+
+Returns success
 
 ### revoke
 ```
 function revoke(address _addr) returns (bool)
 ```
-Revoke an outstanding offer
+Revoke an outstanding offer.
+
+`_addr` The address of a holder to whom an offer had been made.
+
+Returns success.
 
 
 ## Events 
 ```
 Deposit(value);
 ```
-Triggered when contract recieved a payment
+Triggered when contract recieved a payment.
 
 ```
 Withdrawal(sender, recipient, value);
 ```
-Triggered when a ether is sent from the contract
+Triggered when a ether is sent from the contract.
 
 ```
 TransactionPending(pTX, sender, recipient, value, timeLock);
 ```
-Triggered when a transaction is ordered
+Triggered when a transaction is ordered.
 
 ```
 TransactionBlocked(by, pTX);
 ```
-Triggered when a pending transaction is blocked by a holder
+Triggered when a pending transaction is blocked by a holder.
 
 ```
 TransactionFailed(sender, recipient, value);
 ```
-Triggered when a transaction fails either by being blocked or failure of receipt
+Triggered when a transaction fails either by being blocked or failure of receipt.
 
 ```
 DividendsPaid(supply, value);
 ```
-Triggered when the trustee pays dividends
+Triggered when the trustee pays dividends.
 
 ```
 Transfer(from, to, value);
 ```
-ERC20 transfer notification
+ERC20 transfer notification.
 
 ```
 Approval(owner,  spender, value);
 ```
-ERC20 approval notification
+ERC20 approval notification.
 
 ```
 Trustee(trustee);
 ```
-Triggered on change of trustee
+Triggered on change of trustee.
 
 ```
 NewHolder(holder);
 ```
-Trigger when a new holder is added
+Trigger when a new holder is added.
 
 ```
 HolderVacated(holder);
 ```
-Triggered when a holder vacates
+Triggered when a holder vacates.
 
 ```
 TokensCreated(holder, amount);
 ```
-Triggered when tokens are created during a funding round
+Triggered when tokens are created during a funding round.
 
 ```
 TokensDestroyed(holder, amount);
 ```
-Triggered when tokes are destroyed during a redeeming round
+Triggered when tokes are destroyed during a redeeming round.
 
 ```
 Panicked(by);
 ```
-Triggered when a hold causes a panic
+Triggered when a hold causes a panic.
 
 ```
 Calm();
 ```
-Triggered when a holder calms a panic
+Triggered when a holder calms a panic.
 
+```
+OfferRevoked(address)
+```
+Triggered when an odder is revoked.
+
+```
+HolderVacated(address)
+```
+Triggered when a holder vacates.
+
+``` 
+AcceptingPayments(bool)
+```
+Trigger when there is a change to payment acceptance.
