@@ -6,6 +6,67 @@ import "./Modals.html";
 // 	}
 // })
 
+var hideModal = function () { EthElements.Modal.hide(); }
+
+/**
+Template Controllers
+@module Templates
+*/
+
+/**
+The select account template
+@class [template] dapp_selectAccount
+@constructor
+*/
+
+Template['dapp_selectAddress'].onCreated(function(){
+	baktDict.holders.set(currentBakt.getHolders().filter(e=>e!="0x0000000000000000000000000000000000000000"));
+    if(this.data ) {
+        if(this.data.value) {
+            TemplateVar.set('value', this.data.value);
+        } else if(this.data.addresses && this.data.addresses[0]) {
+            TemplateVar.set('value', this.data.addresses[0]);
+        }
+    }
+});
+
+
+Template['dapp_selectAddress'].helpers({
+    /**
+    Return the selected attribute if its selected
+    @method (selected)
+    */
+	addresses: function () {
+		return baktDict.holders.get();
+
+		// return currentBakt.getHolders().filter(e=>e!="0x0000000000000000000000000000000000000000");
+	},
+    'selected': function(){
+        return (TemplateVar.get('value') === this.address)
+            ? {selected: true}
+            : {};
+    },
+    /**
+    Check if the current selected unit is not ether
+    @method (isNotEtherUnit)
+    */
+    'isAddress': function() {
+        return web3.isAddress(TemplateVar.get('value'));
+    }
+});
+
+Template['dapp_selectAddress'].events({
+    /**
+    Set the selected address.
+    
+    @event change select
+    */
+    'change select': function(event){
+        TemplateVar.set('value', event.currentTarget.value);
+    }
+});
+
+
 Template.ChangeBakt.events ({
 	'change .dapp-address-input input': function(event) {
 	var baktAddr = event.currentTarget.value;
@@ -15,14 +76,14 @@ Template.ChangeBakt.events ({
 	'click #btn_newBakt': function(event) {
 			FlowRouter.go('/create');
 	},
-	'submit form' (event, template) {
-		event.preventDefault();
+	'click #btn_ok' (event,) {
 		var addr = TemplateVar.get("baktAddr");
 		EthElements.Modal.hide();
 		if (TemplateVar.get("isBakt")) FlowRouter.go(`/${addr}`);
 		else FlowRouter.go('/');
 	}
 })
+
 
 Template.Factory.helpers ({
 
@@ -34,8 +95,7 @@ Template.Factory.helpers ({
 	},
 	fee: function () {
 		return currentFactory.owner() == holderAddr.get() ?
-			0 :
-			currentFactory.value();
+			0 :	currentFactory.value();
 	},
 	version: function () {
 		return factoryDict.version.get();
@@ -64,33 +124,33 @@ Template.Factory.helpers ({
 })
 
 Template.Factory.events ({
-	'change .dapp-select-account select': function(e) {
-	    holderAddr.set(TemplateVar.getFrom(e.currentTarget, 'value'));
+	'click #btn_cancel': hideModal,
+	'change .dapp-select-account select': function(event) {
+	    holderAddr.set(TemplateVar.getFrom(event.currentTarget, 'value'));
 	},
-	'submit form': function(e) {
-		event.preventDefault();
-		let name = e.currentTarget.children.regName.value;
+	'input [name=regName]': function (event) {
+		TemplateVar.set('regName', event.currentTarget.value);
+	},
+	'click #btn_ok': function(event) {
 		// The fee is not paid by the factory owner
 		let fee = currentFactory.owner() == holderAddr.get() ?
-			0 :
-			currentFactory.value();
+			0 :	currentFactory.value();
 
-		currentFactory.createNew(name, holderAddr.get(),
+		currentFactory.createNew(
+			TemplateVar.get('regName'),
+			holderAddr.get(),
 			{from: holderAddr.get(), value:fee, gas: 3652256},
-			function (e, tx) {
-				pending.set('pending');
-				console.log(e,tx);
-				// tx = web3.eth.getTransaction(tx);
+			function (err, txId) {
+				$("body").addClass("wait");
+				console.log(err, txId);
 				currentFactory.Created().watch(
-					function (e, log) {
-						if(!e) {
-							console.log(e,log);
+					function (err, log) {
+						console.log('tick');
+						if(txId == log.transactionHash) {
+							console.log(err, txId, log);
 							currentFactory.Created().stopWatching();
-							address = log.args._address;
-							pending.set();
-							FlowRouter.go(`/${address}`);
-						} else {
-							console.log(e);
+							$("body").removeClass("wait");
+							FlowRouter.go(`/${log.args._address}`);
 						}
 					}
 				);
@@ -99,6 +159,12 @@ Template.Factory.events ({
 	}
 })
 
+
+Template.Init.rendered = function (){
+		TemplateVar.set('pending', 172800);
+		TemplateVar.set('panic', 172800);
+}
+
 Template.Init.helpers ({
 	isTrustee: function () {
 		accounts = web3.eth.accounts;
@@ -106,25 +172,38 @@ Template.Init.helpers ({
 		for (a in accounts) {
 			if (accounts[a] == trustee) return true;
 		}
-	}
+	},
+	pending: function () {
+		return 	TemplateVar.get('pending');
+
+	},
+	panic: function () {
+		return 	TemplateVar.get('panic');
+	},
 })
+
 Template.Init.events ({
-	'submit form' (event) {
-		event.preventDefault();
-		var txp = event.target.children.pending.value;
-		var panic = event.target.children.panic.value;
+	'input [name=pending]': function(event) {
+		TemplateVar.set('pending', event.currentTarget.value);
+	},
+	'input [name=panic]': function(event) {
+		TemplateVar.set('panic', event.currentTarget.value);
+	},
+	'click #btn_ok' (event) {
 		var trustee = currentBakt.trustee();
-		console.log(txp,panic);
-		currentBakt._init(txp, panic,{from:trustee, gas:90000}, 
-			function (e, tx) {
-				pending.set('pending');
-				console.log(e,tx);
+		currentBakt._init(
+			TemplateVar.get('pending'),
+			TemplateVar.get('panic'),
+			{from:trustee, gas:90000}, 
+			function (err, tx) {
+				$("body").addClass("wait");
+				console.log(err, tx);
 				itvlId = setInterval(
 					function (){
 						console.log('tick');
 						if(web3.eth.getTransactionReceipt(tx)) {
 							clearInterval(itvlId);
-							pending.set();
+							$("body").removeClass("wait");
 							FlowRouter.go(`/${currentBakt.address}`);
 						}
 					},
@@ -135,17 +214,6 @@ Template.Init.events ({
 	}
 })
 
-Template.ChangeHolder.helpers ({
-	accounts: function () {
-		return EthAccounts.findAll().fetch();
-	}
-})
-
-Template.ChangeHolder.events ({
-	'click button' (event, template) {
-		console.log(event);
-	}
-})
 
 Template.PayInto.helpers({
 	etherBalance: function () {
@@ -154,12 +222,16 @@ Template.PayInto.helpers({
 })
 
 Template.PayInto.events({
-	'submit form' (event, template) {
-		event.preventDefault();
-		var value = new BigNumber(event.target.children.ethValue.value * Math.pow(10,18));
-		web3.eth.sendTransaction({to:baktDict.baktAddress.get(), value: value, from:holderAddr.get()}, modalcb);
+	'click #btn_cancel': hideModal,
+	'input [name=value]': function (event) {
+		TemplateVar.set('value',new BigNumber(event.currentTarget.value * Math.pow(10,18)));
+	},
+	'click #btn_ok' (event) {
+		web3.eth.sendTransaction({to:baktDict.baktAddress.get(), 
+			value: TemplateVar.get('value'), from:holderAddr.get()}, cb);
 	}
 })
+
 
 Template.Withdraw.helpers({
 	etherBalance: function () {
@@ -168,35 +240,92 @@ Template.Withdraw.helpers({
 })
 
 Template.Withdraw.events({
-	'submit form' (event, tempate) {
-		event.preventDefault();
-		currentBakt.withdraw(baktDict.holder.get().etherBalance, {from:holderAddr.get(), gas:300000}, modalcb);
+	'click #btn_cancel': hideModal,
+	'click #btn_ok' (event) {
+		currentBakt.withdraw(
+			baktDict.holder.get().etherBalance,	{from:holderAddr.get(), gas:300000}, cb);
 	}
 })
+
+
+Template.AddHolder.events({
+	'click #btn_cancel': hideModal,
+	'input [name=addr]': function (event) {
+		TemplateVar.set('addr',event.currentTarget.value);
+	},
+	'click #btn_ok': function (event) {
+		currentBakt.addHolder(TemplateVar.get('addr'), {from:holderAddr.get(), gas:100000}, cb);
+	}
+})
+
+
+Template.Transfer.rendered = function (){
+	TemplateVar.set('toAddr', this.$('select')[0].value);
+}
 
 Template.Transfer.helpers({
 	tokenBalance: function () {
 		return baktDict.holder.get().tokenBalance;
 	},
-	addrList: function () {
-		holders = currentBakt.getHolders();
-		l = [];
-		var i = 1;
-		while(i < 256 &&
-			holders[i] != "0x0000000000000000000000000000000000000000")
-			l.push(holders[i++]);
-		return l;
+	toAddr: function () {
+		return TemplateVar.get('toAddr');
 	}
 })
 
 Template.Transfer.events({
-	'submit form' (event, template) {
-		event.preventDefault();
-		var amount = event.target.children.amount.value;
-		var to = event.target.children.addr.value;
-		currentBakt.transfer(to, amount, {from:holderAddr.get(), gas:300000}, modalcb);
+	'click #btn_cancel': hideModal,
+	'input [name=amount]': function (event) {
+		TemplateVar.set('amount', event.currentTarget.value);
+	},
+	'change select' (event) {
+		TemplateVar.set('toAddr', event.currentTarget.value);
+	},
+	'click #btn_ok' (event) {
+		var amount = TemplateVar.get('amount');
+		var to = TemplateVar.get('toAddr');
+		currentBakt.transfer(to, amount, {from:holderAddr.get(), gas:300000}, cb);
 	}
 })
+
+
+Template.TransferFrom.rendered = function (){
+	TemplateVar.set('fromAddr', this.$('select')[0].value);
+	TemplateVar.set('toAddr', this.$('select')[1].value);
+	TemplateVar.set('allowance', currentBakt.allowance(TemplateVar.get('fromAddr'), holderAddr.get()));
+}
+
+Template.TransferFrom.helpers({
+	allowance: function () {
+		return TemplateVar.get('allowance');
+	},
+	fromAddr: function () {
+		return TemplateVar.get('fromAddr');
+	},
+	toAddr: function () {
+		return TemplateVar.get('toAddr');
+	}
+})
+
+Template.TransferFrom.events({
+	'click #btn_cancel': hideModal,
+	'change select[name=fromAddr]': function(event) {
+		TemplateVar.set('fromAddr', event.currentTarget.value);
+		TemplateVar.set('allowance', currentBakt.allowance(event.currentTarget.value, holderAddr.get()));
+	},
+	'change select[name=toAddr]': function(event) {
+		TemplateVar.set('toAddr', event.currentTarget.value);
+	},
+	'input [name=amount]': function(event) {
+		TemplateVar.set('amount', event.currentTarget.value);
+	},
+	'click #btn_ok' (event) {
+		fromAddr = TemplateVar.get("fromAddr");
+		toAddr = TemplateVar.get("toAddr");
+		amount = TemplateVar.get("amount");
+		currentBakt.transferFrom(fromAddr, toAddr, amount, {from:holderAddr.get(), gas:300000}, cb);
+	}
+})
+
 
 Template.Allow.helpers({
 	tokenBalance: function () {
@@ -205,27 +334,23 @@ Template.Allow.helpers({
 })
 
 Template.Allow.events({
-	'submit form' (events, template) {
-		event.preventDefault();
-		sender = event.target.children[1].children[0].value;
-		amount = event.target.amount.value;
-		currentBakt.approve(sender, amount,{from:holderAddr.get(), gas:10000}, modalcb);
+	'click #btn_cancel': hideModal,
+	'input [name=sender]': function(event) {
+		TemplateVar.set('sender', event.currentTarget.value);
+	},
+	'input [name=amount]': function (event) {
+		TemplateVar.set('amount', event.currentTarget.value);
+	},
+	'click #btn_ok': function (event) {
+		sender = TemplateVar.get('sender');
+		amount = TemplateVar.get('amount');
+		currentBakt.approve(sender, amount, {from:holderAddr.get(), gas:100000}, cb);
 	}
 })
 
-Template.AddHolder.events({
-	'submit form' (e, template) {
-		e.preventDefault();
-		t = e.target.children[0].children[0];
-		holder = t.value;
-		console.log(t.value, holder);
-
-		currentBakt.addHolder(holder,{from:holderAddr.get(), gas:100000}, modalcb);
-	}
-})
 
 Template.Issue.rendered = function () {
-	TemplateVar.set("offerAmount", 0);
+	TemplateVar.set("amount", new BigNumber(0));
 }
 
 Template.Issue.helpers({
@@ -236,47 +361,29 @@ Template.Issue.helpers({
 		exp = new Date(Date.now() + 7 * 24 * 3600000)
 		return exp.toLocaleString();
 	},
-})
-
-Template.Issue.events({
-	'change .dapp-address-input input': function(event) {
-		TemplateVar.set("account", event.currentTarget.value);
+	address: function () {
+		return TemplateVar.get('address');
 	},
-	'change .amount input': function(event) {
-		TemplateVar.set("offerAmount", this.value);
-	},
-	'submit form' (event, template) {
-		event.preventDefault();
-		address = TemplateVar.get("account");
-		amount = event.target.amount.value;
-		currentBakt.issue(address, amount, {from:holderAddr.get(), gas:300000}, modalcb);
+	lotPrice: function () {
+		return baktDict.tokenPrice.get().mul(TemplateVar.get("amount"));
 	}
 })
 
-Template.Revoke.helpers({
-	addrList: function () {
-		holders = currentBakt.getHolders();
-		l = [];
-		var i = 1;
-		while(i < 256 &&
-			holders[i] != "0x0000000000000000000000000000000000000000")
-			l.push(holders[i++]);
-		return l;
+Template.Issue.events({
+	'click #btn_cancel': hideModal,
+	'input [name=address]': function(event) {
+		TemplateVar.set("address", event.currentTarget.value);
 	},
-	amount: function () {
-		return TemplateVar.get("rHolder").offerAmount;
+	'input [name=amount]': function(event) {
+		TemplateVar.set("amount", new BigNumber(event.currentTarget.value));
 	},
-	expiry: function () {
-		d = TemplateVar.get("rHolder").offerExpiry * 1000
-		if (d) {
-			d = new Date(d);
-			d = d.toLocaleString();
-		} else {
-			d = "--/--/--";
-		}
-		return d;
-	},
+	'click #btn_ok' (event) {
+		address = TemplateVar.get("address");
+		amount = TemplateVar.get("amount");
+		currentBakt.issue(address, amount, {from:holderAddr.get(), gas:300000}, cb);
+	}
 })
+
 
 Template.Revoke.rendered = function (){
 	addr = this.find('select').value;
@@ -297,12 +404,32 @@ Template.Revoke.rendered = function (){
 	);
 }
 
+Template.Revoke.helpers({
+	amount: function () {
+		return TemplateVar.get("rHolder").offerAmount;
+	},
+	expiry: function () {
+		d = TemplateVar.get("rHolder").offerExpiry * 1000
+		if (d) {
+			d = new Date(d);
+			d = d.toLocaleString();
+		} else {
+			d = "--/--/--";
+		}
+		return d;
+	},
+	price: function () {
+		return baktDict.tokenPrice.get().mul(TemplateVar.get("rHolder").offerAmount);
+	}
+})
+
 Template.Revoke.events({
-	'change select': function (e, template) {
-		addr = event.target.value;
+	'click #btn_cancel': hideModal,
+	'input select': function(event) {
+		TemplateVar.set('addr',event.currentTarget.value)
 		TemplateVar.set("rHolder",
 			function () {
-				arr = currentBakt.holders(addr);
+				arr = currentBakt.holders(event.currentTarget.value);
 				return {
 					id: arr[0],
 					votingFor: arr[1],
@@ -316,12 +443,11 @@ Template.Revoke.events({
 			}()
 		);
 	},
-	'submit form' (event, template) {
-		event.preventDefault();
-		address = event.target.children.holders.value
-		currentBakt.revokeOffer(address, {from:holderAddr.get(), gas:300000}, modalcb);		
+	'click #btn_ok' (event) {
+		currentBakt.revokeOffer(TemplateVar.get('addr'), {from:holderAddr.get(), gas:300000}, cb);		
 	}
 })
+
 
 Template.Purchase.helpers({
 	amount: function () {
@@ -343,31 +469,46 @@ Template.Purchase.helpers({
 })
 
 Template.Purchase.events({
-	'submit form' (event, template) {
-		event.preventDefault();
+	'click #btn_cancel': hideModal,
+	'click #btn_ok' (event) {
 		spend = baktDict.holder.get().offerAmount.mul(baktDict.tokenPrice.get());
-		currentBakt.purchase({from:holderAddr.get(), value:spend, gas:300000}, modalcb);
+		currentBakt.purchase({from:holderAddr.get(), value:spend, gas:300000}, cb);
 	}
 })
 
+
+Template.Redeem.rendered = function () {
+	let price = currentBakt.fundBalance().div(currentBakt.totalSupply());
+	if (price.gt(currentBakt.tokenPrice())) price = currentBakt.tokenPrice();
+	TemplateVar.set('price', price);
+}
+
 Template.Redeem.helpers({
-	rPrice: function () {
-		p = currentBakt.fundBalance().div(currentBakt.totalSupply());
-		if (p.gt(currentBakt.tokenPrice())) p = currentBakt.tokenPrice();
-		return p;
+	price: function () {
+		return TemplateVar.get('price');
 	},
 	tokenBalance: function () {
 		return baktDict.holder.get().tokenBalance;
+	},
+	value: function () {
+		return TemplateVar.get('value');
 	}	
 })
 
 Template.Redeem.events({
-	'submit form' (event, template) {
-		event.preventDefault();
-		amount = event.target.rAmount.value;
-		currentBakt.redeem(amount, {from:holderAddr.get(), gas:300000}, modalcb);
+	'input [name=amount]': function (event) {
+		amount = event.currentTarget.value || 0;
+		value = new BigNumber(amount);
+		value = value.mul(TemplateVar.get('price'));
+		TemplateVar.set('value', value);
+		TemplateVar.set('amount', amount)
+	},
+	'click #btn_cancel': hideModal,
+	'click #btn_ok' (event) {
+		currentBakt.redeem(TemplateVar.get('amount'), {from:holderAddr.get(), gas:300000}, cb);
 	}
 })
+
 
 Template.Panic.helpers({
 	'period': function () {
@@ -376,15 +517,20 @@ Template.Panic.helpers({
 })
 
 Template.Panic.events({
-	'submit form': function (event, template){
-		event.preventDefault();
+	'click #btn_cancel': hideModal,
+	'click #btn_ok' (event) {
 		if (event.target.children.validation.checked) {
-			currentBakt.PANIC({from:holderAddr.get()}, modalcb);
+			currentBakt.PANIC({from:holderAddr.get()}, cb);
 		} else {
-			modalcb();
+			cb();
 		}
 	}
 })
+
+
+Template.PayDividends.rendered = function () {
+	TemplateVar.set('value',baktDict.fundBalance.get());
+}
 
 Template.PayDividends.helpers({
 	fundBalance: function () {
@@ -393,17 +539,20 @@ Template.PayDividends.helpers({
 })
 
 Template.PayDividends.events({
-	'submit form' (e, template) {
-		e.preventDefault();
-		dividend = e.target.children.dividends.value * Math.pow(10,18);
-		console.log(dividend);
-		currentBakt.payDividends(dividend,{from:holderAddr.get(), gas:200000}, modalcb)
+	'click #btn_cancel': hideModal,
+	'input [name=value]': function(event) {
+		TemplateVar.set('value', new BigNumber(event.currentTarget.value * Math.pow(10,18)));
+	},
+	'click #btn_ok' (event) {
+		currentBakt.payDividends(TemplateVar.get('value'),
+			{from:holderAddr.get(), gas:200000}, cb)
 	}
 })
 
+
 Template.Execute.helpers({
 	fundBalance: function () {
-		return baktDict.fundBalance.get();
+		return baktDict.fundBalance.get().toNumber();
 	},
 	funcs: function () {
 		return TemplateVar.get("funcs");
@@ -414,42 +563,22 @@ Template.Execute.helpers({
 })
 
 Template.Execute.events({
-	'change .dapp-address-input input': function(e) {
-		TemplateVar.set("to", TemplateVar.getFrom(e.currentTarget, 'value'));
+	'click #btn_cancel': hideModal,
+	'change .dapp-address-input input': function(event) {
+		TemplateVar.set("to", TemplateVar.getFrom(event.currentTarget, 'value'));
 	},
-	'input #sendValue' (e, template) {
-		TemplateVar.set("sendValue", e.target.value * Math.pow(10,18));
+	'input #sendValue' (event, template) {
+		TemplateVar.set("sendValue", event.target.value * Math.pow(10,18));
 	},
-	'input #abi' (e, template) {
-
-		abi = JSON.parse(e.target.value);
-		arr = [];
-		abi.forEach(function(json) {
-			if(json.type === "function" && !json.constant) arr.push(json.name);
-			}
-		);
-		TemplateVar.set("abi", e.target.value);
-		TemplateVar.set("toK", web3.eth.contract(abi).at(TemplateVar.get("to")));
-		TemplateVar.set("funcs", arr);
-	},
-	'change #functName' (e, template) {
-		TemplateVar.set("functName", e.target.value);
-		TemplateVar.set("callData", TemplateVar.get("toK")[TemplateVar.get("functName")].getData(TemplateVar.get("arguments")));
-		console.log(TemplateVar.get("functName"));
-	},
-	'input #arguments' (e, trmplate) {
-		TemplateVar.set("arguments", e.target.value);
-		TemplateVar.set("callData", TemplateVar.get("toK")[TemplateVar.get("functName")].getData(TemplateVar.get("arguments")));
-	},
-	'submit form' (e, template) {
-		e.preventDefault();		
+	'click #btn_ok' (event) {
 		currentBakt.execute(
 			TemplateVar.get("to"),
 			TemplateVar.get("sendValue"),
 			TemplateVar.get("callData") || "",
-			{from:holderAddr.get(), gas:300000}, modalcb);
+			{from:holderAddr.get(), gas:300000}, cb);
 	}
 })
+
 
 Template.VoteFor.helpers ({
 	addrList: function () {
@@ -464,8 +593,27 @@ Template.VoteFor.helpers ({
 })
 
 Template.VoteFor.events({
-	'submit form' (event) {
-		event.preventDefault();	
-		currentBakt.vote(event.target.children.preference.value, {from:holderAddr.get(), gas:300000}, modalcb); 	
+	'click #btn_cancel': hideModal,
+	'input [name=addrList]': function(event) {
+		TemplateVar.set('addr', event.currentTarget.value);
+	},
+	'click #btn_ok' (event) {
+		currentBakt.vote(TemplateVar.get('addr'), {from:holderAddr.get(), gas:300000}, cb); 	
+	}
+})
+
+
+Template.Destroy.helpers({
+})
+
+Template.Destroy.events({
+	'click #btn_cancel': hideModal,
+	'change [name=checked]': function (event) {
+		TemplateVar.set('checked', event.currentTarget.checked);
+	},
+	'click #btn_ok' (event) {
+		if (TemplateVar.get('checked')) {
+			currentBakt.destroy({from:holderAddr.get()}, cb);
+		}
 	}
 })

@@ -1,9 +1,8 @@
 <Template name="PendingTXList">
-	<div class="{{show}}">
+	<div class="">
 	<div class="panel">
 	<h2>Pending Transactions</h2>
-	<button id="btn_send"><label>{{clearSend}}</label></button>
-	<div class="scrollBox">
+	<div class="scrollBox {{show}}">
 	<ul>
 	{{#each pendingTXs}}
 		<li class="state">
@@ -21,6 +20,10 @@
 			<button id="btn_block" data="{{ptxid}}" class="{{canBlock}}">
 				<label><strong>BLOCK</strong></label>
 			</button>
+			<button id="btn_send" data="{{ptxid}}" class="{{canSend}} {{clearSend}}">
+				<label>{{clearSend}}</label>
+			</button>
+
 			<div>
 				<label>Value</label><strong>{{dapp_formatBalance value "0,0.00[0000]" "ether"}}&Xi;</strong>
 			</div>

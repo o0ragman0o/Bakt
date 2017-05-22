@@ -1,27 +1,26 @@
 <Template name="Holder">
 	<div class="panel">
-	<h1>{{> dapp_identicon identity=holderAddr class="dapp-small"}} Holder</h1>
+	<h1>{{> dapp_identicon identity=holderAddr class="dapp-small"}} 
+		{{#if isHolder}} Holder
+		{{else}} Account
+		{{/if}}</h1>
 		<div id="accountSelect">{{> dapp_selectAccount accounts=accounts class="dapp_small"}}</div>
+		<div class="{{showHolder}}">		
  		{{#with holder}}
 			<div><label>Tokens</label> {{tokenBalance}}</div>
 			<div><label>Ether</label> {{dapp_formatBalance etherBalance "0,0.00[0000]" "ether"}}&Xi;</div>
 		{{/with}}
-		<h3></h3>
-		<div class="{{isHolder}}">
+		</div>
+		<div class="{{showHolder}}">
 		<!-- <div> -->
 			<div class="{{inPanicked}}">Can calm after: {{calmTime}}</div>
-			<div>
-				<button id="btn_panic" class="{{canPanic}}">
-					<label>Panic</label>
-				</button>
-				<button id="btn_calm" class="{{canCalm}}">
-					<label>Calm</label>
-				</button>
-			</div>
 			<div class="{{notPanicked}} {{isHolder}}">
 				<div>
 				<button id="btn_transfer" class="{{hasTokens}}">
 					<label>Transfer</label>
+				</button>
+				<button id="btn_transferFrom" class="">
+					<label>Transfer From</label>
 				</button>
 				<button id="btn_allow" class="{{hasTokens}}">
 					<label>Allow</label>
@@ -37,17 +36,12 @@
 				<button id="btn_withdraw" class="{{hasEther}}">
 					<label>Withdraw</label>
 				</button>
+				<button id="btn_vacate" class="{{canVacate}}">
+					<label>Vacate</label>
+				</button>
 				</div>
 			</div>
-			<div class="{{isTrustee}} {{notPanicked}}">
-				<div>
-				<button id="btn_execute" class="">
-					<label>Execute</label>
-				</button>
-				<button id="btn_payDividends" class="">
-					<label>Pay Dividends</label>
-				</button>
-				</div>
+			<div class="{{showTrustee}} {{notPanicked}}">
 				<div>
 				<button id="btn_addHolder" class="">
 					<label>Add Holder</label>
@@ -60,9 +54,30 @@
  					<label>Revoke</label> 					
  				</button>
  				</div>
+				<div>
+				<button id="btn_execute" class="">
+					<label>Execute</label>
+				</button>
+				<button id="btn_payDividends" class="">
+					<label>Pay Dividends</label>
+				</button>
+ 				<button id="btn_destroy" class="{{canDestroy}}">
+ 					<label>Destroy</label>
+ 				</button>
+				</div>
  			</div>
+			<div>
+				<div>
+				<button id="btn_panic" class="{{canPanic}}">
+					<label>Panic</label>
+				</button>
+				<button id="btn_calm" class="{{canCalm}}">
+					<label>Calm</label>
+				</button>
+				</div>
+			</div>
 		</div>
-		<div class="foot {{isHolder}}">
+		<div class="foot {{showHolder}}">
 			<label>Voting For</label>
 			<button id="btn_vote">
 			{{#with holder}}

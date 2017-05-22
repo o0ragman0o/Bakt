@@ -1,7 +1,7 @@
 /*
 file:   Bakt.sol
-ver:    0.3.4-beta
-updated:16-May-2017
+ver:    0.3.5-beta
+updated:22-May-2017
 author: Darryl Morris
 email:  o0ragman0o AT gmail.com
 
@@ -41,15 +41,19 @@ Maximum number of holders is limited to 254 to prevent potential OOG loops
 during elections.
 Perpetual election of the `Trustee` runs in O(254) time to discover a winner.
 
-Release Notes v0.3.4-beta:
--fixed magnitude bug introduced when using scientific notation (10**18 != 10e18)
--using 10**18 notation rather than 1e18 as already using 2**256 notation
--Deploy factory to Ropsten, Rinkeby and Live 
-
-Ropsten: 0.3.4-beta-test1 @ 0xc446575f7ed13f7b4b849f70ffa9f209a64db742
+Release Notes v0.3.5-beta:
+- fixed Dividend event which was dropped in dividends refactoring
+- added event OfferRevoked(address)
+- added event HolderVacated(address) 
+- added event AcceptingPayments(bool)
+- changed holder function: withdraw() returns (uint8) to withdraw(uint _value) returns (bool);
+- added holder function: withdrawFrom(address _addr, uint _value) returns (bool);
+- added trustee function: withdrawFor(address _addr, uint _value) returns (bool);
+- Destroy with committedEther < 1,000,000,000 due to rounding error accumulation
 
 */
 
+import "https://github.com/o0ragman0o/Withdrawable/contracts/WithdrawableInterface.sol";
 import "https://github.com/o0ragman0o/SandalStraps/contracts/Factory.sol";
 
 pragma solidity ^0.4.10;
@@ -85,7 +89,7 @@ contract BaktInterface
 /* Constants */
 
     // Constant max tokens and max ether to prevent potential multiplication
-    // overflows in 10e17 fixed point     
+    // overflows in 1e18 fixed point     
     uint constant MAXTOKENS = 2**128 - 10**18;
     uint constant MAXETHER = 2**128;
     uint constant BLOCKPCNT = 10; // 10% holding required to block TX's
@@ -160,6 +164,9 @@ contract BaktInterface
 
 /* Events */
 
+    // Trigger on change to accepting payments
+    event AcceptingPayments(bool state);
+    
     // Triggered when the contract recieves a payment
     event Deposit(uint value);
 
@@ -200,6 +207,9 @@ contract BaktInterface
     // Triggered when a offer of tokens is created
     event IssueOffer(address indexed holder);
 
+    // Triggered when an offer is revoked
+    event OfferRevoked(address indexed holder);
+    
     // Triggered on token creation when an offer is accepted
     event TokensCreated(address indexed holder, uint amount);
 
@@ -311,6 +321,10 @@ contract BaktInterface
     /// @dev Allows the trustee to commit a portion of `fundBalance` to dividends.
     function payDividends(uint _value) returns (bool);
 
+    /// @notice Initiate a proxy withdrawal of a holder's `etherBalance`
+    /// @return success
+    function withdrawFor(address _addr, uint _value) returns(bool);
+    
 //
 // Holder Functions
 //
@@ -323,12 +337,18 @@ contract BaktInterface
     function etherBalanceOf(address _addr) constant returns (uint);
 
     /// @notice Initiate a withdrawal of the holder's `etherBalance`
-    /// Follow up with sendPending() once the timelock has expired
-    function withdraw() returns(uint8);
+    /// @return success
+    function withdraw(uint _value) returns(bool);
+    
+    /// @notice Call a 3rd party cantract's withdraw(value) function
+    /// @param _addr the address of the external contract
+    /// @param _value the value of ether to be withdrawn
+    function withdrawFrom(address _addr, uint _value) returns (bool);
 
     /// @notice Vacate holder `_addr`
     /// @param _addr The address of a holder with empty balances.
     function vacate(address _addr) returns (bool);
+
 
 //
 // Token Creation/Destruction Functions
@@ -360,7 +380,7 @@ contract BaktInterface
 
 contract Bakt is BaktInterface
 {
-    bytes32 constant public VERSION = "Bakt 0.3.4-beta";
+    bytes32 constant public VERSION = "Bakt 0.3.5-beta";
 
 //
 // Bakt Functions
@@ -394,7 +414,7 @@ contract Bakt is BaktInterface
         canEnter
         onlyTrustee
     {
-        require(totalSupply == 0 && committedEther == 0);
+        require(totalSupply == 0 && committedEther < 1000000000);
         
         delete holders[trustee];
         selfdestruct(msg.sender);
@@ -673,11 +693,12 @@ contract Bakt is BaktInterface
         returns (bool)
     {
         require(_value <= fundBalance());
-        // Calculates dividend as percent of current `totalSupply` in 10e17
+        // Calculates dividend as percent of current `totalSupply` in 1e18
         // fixed point math
         dividendPoints += 10**18 * _value / totalSupply;
         totalDividends += _value;
         committedEther += _value;
+        DividendPaid(_value);
         return true;
     }
     
@@ -724,6 +745,7 @@ contract Bakt is BaktInterface
         returns (bool)
     {
         acceptingPayments = _accepting;
+        AcceptingPayments(_accepting);
         return true;
     }
 
@@ -755,8 +777,25 @@ contract Bakt is BaktInterface
         Holder holder = holders[_addr];
         delete holder.offerAmount;
         delete holder.offerExpiry;
+        OfferRevoked(_addr);
         return true;
     }
+
+    function withdrawFor(address _addr, uint _amount)
+        public
+        canEnter
+        onlyTrustee
+        returns(bool)
+    {
+        Holder holder = holders[_addr];
+        require(_amount <= holder.etherBalance);
+        updateDividendsFor(holder);
+        
+        holder.etherBalance -= _amount;
+        timeLockSend(msg.sender, msg.sender, _amount, "");
+        return true;
+    }
+
 
 //
 // Holder Functions
@@ -782,16 +821,30 @@ contract Bakt is BaktInterface
     }
 
     // For a holder to initiate a withdrawal of their ether balance
-    function withdraw()
+    function withdraw(uint _value)
         public
         canEnter
-        returns(uint8 pTxId_)
+        returns(bool)
     {
         Holder holder = holders[msg.sender];
         updateDividendsFor(holder);
+        require(_value <= holder.etherBalance);
         
-        pTxId_ = timeLockSend(msg.sender, msg.sender, holder.etherBalance, "");
-        holder.etherBalance = 0;
+        holder.etherBalance -= _value;
+        timeLockSend(msg.sender, msg.sender, _value, "");
+        return true;
+    }
+
+    // To withdraw funds from an external contract which this instance may have
+    // a balance
+    function withdrawFrom(address _addr, uint _value)
+        public
+        preventReentry
+        isHolder(msg.sender)
+        returns (bool)
+    {
+        require(WithdrawableInterface(_addr).withdraw(_value));
+        return true;
     }
 
     // To close a holder account
@@ -814,6 +867,7 @@ contract Bakt is BaktInterface
         delete holderIndex[holder.id];
         delete holders[_addr];
         // NB can't garbage collect holder.allowances mapping
+        HolderVacated(_addr);
         return (true);
     }
 
@@ -1013,16 +1067,11 @@ contract Bakt is BaktInterface
 // SandalStraps compliant factory for Bakt
 contract BaktFactory is Factory
 {
-    // Live: 0xc7c11eb6983787f7aa0c20abeeac8101cf621e47
-    // Ropsten: 0xda33129464688b7bd752ce64e9ed6bca65f44902 (could not verify),
-    //          0x19124dbab3fcba78b8d240ed2f2eb87654e252d4 (verified)
-    //
-    // Rinkeby: 0xd0198d2a9c2e4474bcbe5514b196cb367d5da790
 
 /* Constants */
 
     bytes32 constant public regName = "Bakt";
-    bytes32 constant public VERSION = "Bakt Factory v0.3.4-beta";
+    bytes32 constant public VERSION = "Bakt Factory v0.3.5-beta";
 
 /* Constructor Destructor*/
 
@@ -1040,7 +1089,8 @@ contract BaktFactory is Factory
         returns (address kAddr_)
     {
         require(_regName != 0x0);
-        kAddr_ = new Bakt(owner, _regName, msg.sender);
+        if (_owner == 0x0) _owner = msg.sender;
+        kAddr_ = new Bakt(owner, _regName, _owner);
         Created(msg.sender, _regName, kAddr_);
     }
 }

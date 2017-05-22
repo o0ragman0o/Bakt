@@ -1,5 +1,10 @@
 import "./Holder.html"
 
+Template.Holder.rendered= function (){
+	this.$('select')[0].value = holderAddr.get();
+	update();
+}
+
 Template.Holder.helpers({
 	accounts: function () {
 		return EthAccounts.findAll().fetch();
@@ -55,18 +60,40 @@ Template.Holder.helpers({
 			else return "hide";		
 	},
 
-	isTrustee: function () {
+	showTrustee: function () {
 		if(holderAddr.get() == baktDict.trustee.get()) return "show";
 		else return "hide";
 	},
 
 	isHolder: function () {
+		if(baktDict.holder.get().id.toNumber()) return true;
+		else return false;
+	},
+
+	showHolder: function () {
 		if(baktDict.holder.get().id.toNumber()) return "show";
 		else return "hide";
 	},
+
 	isExpired: function () {
 		if (Date.now() > baktDict.holder.get().offerExpiry * 1000) return "hide";
 		else return "show";
+	},
+	canDestroy: function () {
+		if (baktDict.totalSupply.get().toNumber() || baktDict.committedEther.gt(1000000000))
+			return "hide";
+		else
+			return "show";
+	},
+	canVacate: function () {
+		holder = baktDict.holder.get();
+		if (holder.etherBalance.eq(0) &&
+			holder.tokenBalance.eq(0) &&
+			holderAddr.get() != baktDict.trustee.get() &&
+			baktDict.pendingTXs.get().length == 0)
+			return "show";
+		else
+			return "hide";
 	}
 
 })
@@ -84,6 +111,9 @@ Template.Holder.events({
 	},
 	'click #btn_transfer': function (e, template) {
 		EthElements.Modal.show({template:'Transfer'})
+	},
+	'click #btn_transferFrom': function (e, template) {
+		EthElements.Modal.show({template:'TransferFrom'})
 	},
 	'click #btn_allow': function (e, template) {
 		EthElements.Modal.show({template:'Allow'});
@@ -120,7 +150,9 @@ Template.Holder.events({
 	},
 	'click #btn_vote': function (e, template) {
 		EthElements.Modal.show({template:"VoteFor"});
-		// EthElements.Modal.show({template:"HolderList"})
+	},
+	'click #btn_destroy': function (e, template) {
+		EthElements.Modal.show({template:"Destroy"});
 	}
 })
 
