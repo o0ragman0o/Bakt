@@ -1,0 +1,13 @@
+<Template name="ChangeBakt">
+	<h3>Bakt Address</h3>
+	<div id="baktSelect">
+	{{> dapp_selectAccount accounts=bakts}}
+	</div>
+
+	<input id="btn_ok" type="button" value="Go" {{isBakt}}/>	
+	<p><i>or</i></p>
+	<input id="btn_newBakt" type="button" value="Create a New Bakt" />
+	<input id="btn_cancel" type="button" value="Cancel" {{canCancel}}>
+</Template>
+
+

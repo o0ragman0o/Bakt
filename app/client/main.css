@@ -102,6 +102,7 @@ ul {
 .bakt-container {
 	display: flex;
 	flex-direction: column;
+	/*flex-wrap: wrap;*/
 	align-items: center;
 	padding: 5px;
 	margin: 5px;
@@ -185,6 +186,11 @@ ul {
 
 .wait {
 	cursor: wait;
+}
+
+button:disabled {
+    color: #eee;
+    border-color: #eee;
 }
 
 

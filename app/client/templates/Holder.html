@@ -16,27 +16,27 @@
 			<div class="{{inPanicked}}">Can calm after: {{calmTime}}</div>
 			<div class="{{notPanicked}} {{isHolder}}">
 				<div>
-				<button id="btn_transfer" class="{{hasTokens}}">
+				<button id="btn_transfer" {{hasTokens}}>
 					<label>Transfer</label>
 				</button>
 				<button id="btn_transferFrom" class="">
 					<label>Transfer From</label>
 				</button>
-				<button id="btn_allow" class="{{hasTokens}}">
+				<button id="btn_allow" {{hasTokens}}>
 					<label>Allow</label>
 				</button>
 				</div>
 				<div>
-				<button id="btn_purchase" class="{{isExpired}}">
+				<button id="btn_purchase" {{isExpired}}>
 					<label>Purchase</label>
 				</button>
-				<button id="btn_redeem" class="{{hasTokens}}">
+				<button id="btn_redeem" {{hasTokens}}>
 					<label>Redeem</label>
 				</button>
-				<button id="btn_withdraw" class="{{hasEther}}">
+				<button id="btn_withdraw" {{hasEther}}>
 					<label>Withdraw</label>
 				</button>
-				<button id="btn_vacate" class="{{canVacate}}">
+				<button id="btn_vacate" {{canVacate}}>
 					<label>Vacate</label>
 				</button>
 				</div>
@@ -68,10 +68,10 @@
  			</div>
 			<div>
 				<div>
-				<button id="btn_panic" class="{{canPanic}}">
+				<button id="btn_panic" {{canPanic}}>
 					<label>Panic</label>
 				</button>
-				<button id="btn_calm" class="{{canCalm}}">
+				<button id="btn_calm" {{canCalm}}>
 					<label>Calm</label>
 				</button>
 				</div>

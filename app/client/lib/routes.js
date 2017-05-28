@@ -25,7 +25,7 @@ FlowRouter.route('/:baktAddr', {
 
             // EthElements.Modal.show({template:'Factory'});
 
-FlowRouter.route('/init/:baktAddr', {
+FlowRouter.route('/:baktAddr/init', {
 	name: "init",
 	action: function() {
 		EthElements.Modal.show({
@@ -34,12 +34,12 @@ FlowRouter.route('/init/:baktAddr', {
 	}
 });
 
-// FlowRouter.notFound = {
-// 	action() {
-// 		FlowRouter.go('/');
-// 		console.log("not found");
-// 	}
-// }
+FlowRouter.notFound = {
+	action() {
+		FlowRouter.go('/');
+		console.log("not found");
+	}
+}
 
 // FlowRouter.route('/:notFound*', {
 //   name: 'notFound',

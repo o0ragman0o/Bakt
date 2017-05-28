@@ -10,6 +10,7 @@ holderAddr = new ReactiveVar();
 holderAddr.set(EthAccounts.findOne().address);
 ethAccount = new ReactiveVar();
 title = new ReactiveVar("Bakt");
+pendingTX = 0;
 document.title = title.get();
 
 
@@ -17,14 +18,16 @@ cb = function(err, txHash) {
 	if(!err) {
 		console.log(txHash);
 		$("body").addClass("wait");
+		pendingTX++;
+		EthElements.Modal.hide();
 		itvlId = setInterval(
 			function (err){
-				console.log('tick');
+				console.log('tick', itvlId);
 				if(web3.eth.getTransactionReceipt(txHash)) {
 					clearInterval(itvlId);
-					$("body").removeClass("wait");
+					pendingTX--;
+					if(!pendingTX) $("body").removeClass("wait");
 					update();
-					EthElements.Modal.hide();
 				}
 			},
 			1000);

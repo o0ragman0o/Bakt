@@ -28,16 +28,16 @@ Template.Holder.helpers({
 	canPanic: function () {
 		if (baktDict.holder.get().tokenBalance.gte(baktDict.totalSupply.get().div(10)) ||
 			holderAddr.get() == baktDict.trustee.get())
-			return "show";
+			return "";
 		else 
-			return "hide";
+			return "disabled";
 
 	},
 	canCalm: function () {
 		if (baktDict.panicked.get() &&
 			baktDict.timeToCalm.get().toNumber() * 1000 < Date.now())
-				return "show";
-		else return "hide";
+				return "";
+		else return "disabled";
 	},
 
 	calmTime: function () {
@@ -51,13 +51,13 @@ Template.Holder.helpers({
 	},
 
 	hasTokens: function () {
-		if (baktDict.holder.get().tokenBalance.gt(0)) return "show"
-			else return "hide";		
+		if (baktDict.holder.get().tokenBalance.gt(0)) return ""
+			else return "disabled";		
 	},
 
 	hasEther: function () {
-		if (baktDict.holder.get().etherBalance.gt(0)) return "show"
-			else return "hide";		
+		if (baktDict.holder.get().etherBalance.gt(0)) return ""
+			else return "disabled";		
 	},
 
 	showTrustee: function () {
@@ -76,11 +76,11 @@ Template.Holder.helpers({
 	},
 
 	isExpired: function () {
-		if (Date.now() > baktDict.holder.get().offerExpiry * 1000) return "hide";
-		else return "show";
+		if (Date.now() > baktDict.holder.get().offerExpiry * 1000) return "disabled";
 	},
+
 	canDestroy: function () {
-		if (baktDict.totalSupply.get().toNumber() || baktDict.committedEther.gt(1000000000))
+		if (baktDict.totalSupply.get().toNumber() || baktDict.committedEther.get().gt(1000000000))
 			return "hide";
 		else
 			return "show";
@@ -91,9 +91,9 @@ Template.Holder.helpers({
 			holder.tokenBalance.eq(0) &&
 			holderAddr.get() != baktDict.trustee.get() &&
 			baktDict.pendingTXs.get().length == 0)
-			return "show";
+			return "";
 		else
-			return "hide";
+			return "disabled";
 	}
 
 })
@@ -127,6 +127,9 @@ Template.Holder.events({
 	'click #btn_redeem': function (e, template) {
 		EthElements.Modal.show({template:'Redeem'});
 	},
+	'click #btn_vacate': function (event, template) {
+		EthElements.Modal.show({template:'Vacate'});
+	},
 	'click #btn_panic': function (event, template){
 		EthElements.Modal.show({template: 'Panic'});
 	},
@@ -153,6 +156,7 @@ Template.Holder.events({
 	},
 	'click #btn_destroy': function (e, template) {
 		EthElements.Modal.show({template:"Destroy"});
-	}
+	},
+
 })
 

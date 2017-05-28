@@ -98,7 +98,7 @@ changeBakt = function (baktAddr) {
 		}
 		if (web3.toUtf8(currentBakt.VERSION()).slice(0,4) == "Bakt"){
 			if (!currentBakt.PANICPERIOD().toNumber()) {
-				FlowRouter.go(`/init/${baktAddr}`);
+				FlowRouter.go(`/${baktAddr}/init`);
 			} else {
 				baktDict.baktAddress.set(baktAddr);
 				baktDict.live.set(true);
@@ -109,6 +109,7 @@ changeBakt = function (baktAddr) {
 							events = baktDict.events.get();
 							events.push(eventToString(event));
 							baktDict.events.set(events);
+							update();
 					});
 
 				EthElements.Modal.hide();
@@ -116,11 +117,11 @@ changeBakt = function (baktAddr) {
 				// oneSec = Meteor.setInterval(update, 1000);
 			}
 		} else {
-			modalcb();
+			cb();
 			FlowRouter.go('/');
 		}
 	} else {
-		modalcb();
+		cb();
 		FlowRouter.go('/');
 	}
 }

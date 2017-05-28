@@ -30,15 +30,15 @@ Template.Bakt.helpers ({
 	},
 	resource: function() {
 		return baktDict.resource.get();
-	}
+	},
+	network: function() {
+		return networkName;
+	},
 })
 
 Template.Bakt.events ({
-	'click #btn_bakt': function (e, template) {
+	'click #btn_change': function (e, template) {
 		FlowRouter.go('/');
-		// EthElements.Modal.show({
-		// 	template: 'ChangeBakt',
-		// });
 	},
 	'click #btn_payInto': function (e, template) {
 		EthElements.Modal.show({

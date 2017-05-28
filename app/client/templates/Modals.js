@@ -1,11 +1,5 @@
 import "./Modals.html";
 
-// Template.ChangeBakt.helpers ({
-// 	isBakt: function () {
-// 		return TemplateVar.get("isBakt");
-// 	}
-// })
-
 var hideModal = function () { EthElements.Modal.hide(); }
 
 /**
@@ -19,16 +13,18 @@ The select account template
 @constructor
 */
 
-Template['dapp_selectAddress'].onCreated(function(){
+// Template['dapp_selectAddress'].onCreated(function(){
+Template['dapp_selectAddress'].rendered = function(){
 	baktDict.holders.set(currentBakt.getHolders().filter(e=>e!="0x0000000000000000000000000000000000000000"));
     if(this.data ) {
         if(this.data.value) {
             TemplateVar.set('value', this.data.value);
-        } else if(this.data.addresses && this.data.addresses[0]) {
-            TemplateVar.set('value', this.data.addresses[0]);
+        } else if(this.data.accounts && this.data.accounts[0]) {
+            TemplateVar.set('value', this.data.accounts[0]);
         }
     }
-});
+}
+// );
 
 
 Template['dapp_selectAddress'].helpers({
@@ -41,7 +37,7 @@ Template['dapp_selectAddress'].helpers({
 
 		// return currentBakt.getHolders().filter(e=>e!="0x0000000000000000000000000000000000000000");
 	},
-    'selected': function(){
+    selected: function(){
         return (TemplateVar.get('value') === this.address)
             ? {selected: true}
             : {};
@@ -50,7 +46,7 @@ Template['dapp_selectAddress'].helpers({
     Check if the current selected unit is not ether
     @method (isNotEtherUnit)
     */
-    'isAddress': function() {
+    isAddress: function() {
         return web3.isAddress(TemplateVar.get('value'));
     }
 });
@@ -65,25 +61,6 @@ Template['dapp_selectAddress'].events({
         TemplateVar.set('value', event.currentTarget.value);
     }
 });
-
-
-Template.ChangeBakt.events ({
-	'change .dapp-address-input input': function(event) {
-	var baktAddr = event.currentTarget.value;
-		TemplateVar.set("isBakt", web3.toUtf8(baktContract.at(baktAddr).VERSION()).slice(0,4) == "Bakt");
-		TemplateVar.set("baktAddr", baktAddr);
-	},
-	'click #btn_newBakt': function(event) {
-			FlowRouter.go('/create');
-	},
-	'click #btn_ok' (event,) {
-		var addr = TemplateVar.get("baktAddr");
-		EthElements.Modal.hide();
-		if (TemplateVar.get("isBakt")) FlowRouter.go(`/${addr}`);
-		else FlowRouter.go('/');
-	}
-})
-
 
 Template.Factory.helpers ({
 
@@ -119,12 +96,15 @@ Template.Factory.helpers ({
 		return web3.eth.getBalance(holderAddr.get()) > factoryDict.fee.get().plus(web3.eth.gasPrice.mul(3652256)).toNumber();
 	},
 	network: function() {
-		return ["","","morden.","ropsten.","rinkeby."][web3.version.network];
+		return networkName;
 	},
+	validName: function() {
+		return TemplateVar.get('regName') ? "" : "disabled";
+	}
 })
 
 Template.Factory.events ({
-	'click #btn_cancel': hideModal,
+	'click #btn_cancel': function () {history.back()},
 	'change .dapp-select-account select': function(event) {
 	    holderAddr.set(TemplateVar.getFrom(event.currentTarget, 'value'));
 	},
@@ -132,6 +112,7 @@ Template.Factory.events ({
 		TemplateVar.set('regName', event.currentTarget.value);
 	},
 	'click #btn_ok': function(event) {
+		if(!TemplateVar.get('regName')) return;
 		// The fee is not paid by the factory owner
 		let fee = currentFactory.owner() == holderAddr.get() ?
 			0 :	currentFactory.value();
@@ -150,7 +131,7 @@ Template.Factory.events ({
 							console.log(err, txId, log);
 							currentFactory.Created().stopWatching();
 							$("body").removeClass("wait");
-							FlowRouter.go(`/${log.args._address}`);
+							FlowRouter.go(`/${log.args.addr}`);
 						}
 					}
 				);
@@ -525,6 +506,20 @@ Template.Panic.events({
 			cb();
 		}
 	}
+})
+
+
+Template.Vacate.helpers({
+	address: function () {
+		return holderAddr.get();
+	}
+})
+
+Template.Vacate.events({
+	'click #btn_cancel': hideModal,
+	'click #btn_ok' (event) {
+		currentBakt.vacate(holderAddr.get(), {from:holderAddr.get()}, cb);
+	}	
 })
 
 

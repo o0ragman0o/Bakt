@@ -12,30 +12,20 @@
 </Template>
 
 
-<Template name="ChangeBakt">
-	<h3>Bakt Address</h3>
-	{{> dapp_addressInput name="bakt" value=address class="dapp-medium"}}
-	<input id="btn_ok" type="button" value="Go"/>		
-	<p><i>or</i></p>
-	<input type="button" id="btn_newBakt" value="Create a New Bakt" />
-	<input id="btn_cancel" type="button" value="Cancel">
-</Template>
-
-
 <Template name="Factory">
 	<h3>Create A New Bakt</h3>
-	{{> dapp_identicon identity=address class="dapp-tiny"}}
-	<a href="https://{{network}}etherscan.io/address/{{address}}">{{address}}</a><br>
 	<p>{{version}}</p>
+	 {{> dapp_identicon identity=address class="dapp-tiny"}}
+	<a href="https://{{network}}etherscan.io/address/{{address}}" target="_blank">{{address}}</a>
 	<p><a href="{{resource}}">{{resource}}</a></p>
 	<p>Creation Fee<br>
 	{{dapp_formatBalance fee "0,0.00[0000]" "ether"}}&Xi;</p>
 	<p>From account
 	{{> dapp_selectAccount accounts=accounts class="dapp_small"}}</p>
-	<p>Name<br>
+	<p>ENS Name<br>
 	<input name="regName" placeholder="Name"></p>
 	{{#if hasFunds}}
-	<input id="btn_ok" type="button" value="Create"/>		
+	<input id="btn_ok" type="button" value="Create" {{validName}}/>		
 	{{else}}
 	Insufficient funds
 	{{/if}}
@@ -166,6 +156,16 @@
 	<input id="btn_cancel" type="button" value="Cancel">	
 </Template>
 
+
+<Template name="Vacate">
+	<h3>Vacate Bakt</h3>
+	<p>Are you sure you want to vacate your account from this Bakt?</p>
+	<p>Vacating from the Bakt will prevent any further action in the Bakt from this account.
+	This may be required if the Bakt membership is full or if the holder wishes to change accounts.</p>
+	{{> dapp_addressInput name="sender" value=address class="dapp-medium"}}
+	<input id="btn_ok" type="button" value="Yes">
+	<input id="btn_cancel" type="button" value="No">
+</Template>
 
 <Template name="PayDividends">
 	<h3>Pay Dividends</h3>
