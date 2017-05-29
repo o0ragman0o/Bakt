@@ -1,0 +1,20 @@
+<Template name="Init">
+	<div class="panel">
+	<h3>Initialize Bakt</h3>
+	<p>Attention: This Bakt is not initialized</p>
+	<p>Please enter the time in seconds for the transaction pending and panic periods<br>
+	(1 day == 86400 seconds)</p>
+	<p><strong>This action can only be done once!</strong></p>
+	<p>Tansaction Pending Period (seconds)<br>
+	<input name="pending" type="number" value="{{pending}}"></p>
+	<p>Panic Period (seconds)<br>
+	<input name="panic" type="number" value="{{panic}}"></p>
+	<p>
+	{{#if isTrustee}}
+	<input id="btn_ok" type="button" value="Initialize"/>		
+	{{else}}
+	Could not find controlling account
+	{{/if}}
+	</p>
+	</div>
+</Template>

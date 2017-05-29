@@ -93,7 +93,7 @@ changeBakt = function (baktAddr) {
 		try { currentBakt.VERSION() }
 		catch(err) { 
 			console.log(err);
-			modalcb();
+			// modalcb();
 			FlowRouter.go('/');			
 		}
 		if (web3.toUtf8(currentBakt.VERSION()).slice(0,4) == "Bakt"){
@@ -117,11 +117,11 @@ changeBakt = function (baktAddr) {
 				// oneSec = Meteor.setInterval(update, 1000);
 			}
 		} else {
-			cb();
+			// cb();
 			FlowRouter.go('/');
 		}
 	} else {
-		cb();
+		// cb();
 		FlowRouter.go('/');
 	}
 }

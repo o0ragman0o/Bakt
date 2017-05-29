@@ -12,44 +12,7 @@
 </Template>
 
 
-<Template name="Factory">
-	<h3>Create A New Bakt</h3>
-	<p>{{version}}</p>
-	 {{> dapp_identicon identity=address class="dapp-tiny"}}
-	<a href="https://{{network}}etherscan.io/address/{{address}}" target="_blank">{{address}}</a>
-	<p><a href="{{resource}}">{{resource}}</a></p>
-	<p>Creation Fee<br>
-	{{dapp_formatBalance fee "0,0.00[0000]" "ether"}}&Xi;</p>
-	<p>From account
-	{{> dapp_selectAccount accounts=accounts class="dapp_small"}}</p>
-	<p>ENS Name<br>
-	<input name="regName" placeholder="Name"></p>
-	{{#if hasFunds}}
-	<input id="btn_ok" type="button" value="Create" {{validName}}/>		
-	{{else}}
-	Insufficient funds
-	{{/if}}
-	<input id="btn_cancel" type="button" value="Cancel">
-</Template>
 
-
-<Template name="Init">
-	<h3>Initialize Bakt</h3>
-	<p>Attention: This Bakt is not initialized</p>
-	<p>Please enter the time in seconds for the transaction pending and panic periods (1 day == 86400 seconds)</p>
-	<p><strong>This action can only be done once!</strong></p>
-	<p>Tansaction Pending Period (seconds)
-	<input name="pending" type="number" value="{{pending}}"></p>
-	<p>Panic Period (seconds)
-	<input name="panic" type="number" value="{{panic}}"></p>
-	<p>
-	{{#if isTrustee}}
-	<input id="btn_ok" type="button" value="Initialize"/>		
-	{{else}}
-	Could not find controlling account
-	{{/if}}
-	</p>
-</Template>
 
 
 <Template name="PayInto">

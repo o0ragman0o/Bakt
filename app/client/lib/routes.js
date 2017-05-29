@@ -1,18 +1,21 @@
 FlowRouter.route('/', {
     name: "root",
     action: function(params) {
-		EthElements.Modal.show({
-				template: 'ChangeBakt',
-		});
+        currentPage.set('ChangeBakt');
+		// EthElements.Modal.show({
+		// 		template: 'ChangeBakt',
+		// });
     }
 });
 
 FlowRouter.route('/create', {
     name: "create",
     action: function() {
-        EthElements.Modal.show({
-                template:'Factory',
-        });
+        currentPage.set('Factory');
+
+        // EthElements.Modal.show({
+        //         template:'Factory',
+        // });
     }
 });
 
@@ -20,6 +23,7 @@ FlowRouter.route('/:baktAddr', {
     name: "address",
     action: function(params) {
     	changeBakt(params.baktAddr);
+        currentPage.set('BaktPanels');
    }
 });
 
@@ -28,9 +32,11 @@ FlowRouter.route('/:baktAddr', {
 FlowRouter.route('/:baktAddr/init', {
 	name: "init",
 	action: function() {
-		EthElements.Modal.show({
-				template: 'Init',
-		});	
+        currentPage.set('Init');
+
+		// EthElements.Modal.show({
+		// 		template: 'Init',
+		// });	
 	}
 });
 

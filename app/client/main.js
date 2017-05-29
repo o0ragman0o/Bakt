@@ -3,6 +3,7 @@ import { ReactiveVar } from 'meteor/reactive-var';
 
 import './main.html';
 
+currentPage = new ReactiveVar();
 pending = new ReactiveVar();
 holder = new ReactiveVar();
 isLive = new ReactiveVar();

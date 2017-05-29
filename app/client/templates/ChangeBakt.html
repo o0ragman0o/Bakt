@@ -1,13 +1,18 @@
 <Template name="ChangeBakt">
-	<h3>Bakt Address</h3>
+	<div class="panel">
+	<h1>BAKT Exclusive Trust DAPP</h1>
+	<a href="https://github.com/o0ragman0o/Bakt" target="_none">github.com/o0ragman0o/Bakt</a>
+	<p>Select Bakt</p>
 	<div id="baktSelect">
-	{{> dapp_selectAccount accounts=bakts}}
+	{{> dapp_selectAccount accounts=bakts}}<br>
+	<a href="https://{{network}}etherscan.io/address/{{baktAddr}}" target="_blank">{{baktAddr}}</a><br>
 	</div>
 
 	<input id="btn_ok" type="button" value="Go" {{isBakt}}/>	
 	<p><i>or</i></p>
 	<input id="btn_newBakt" type="button" value="Create a New Bakt" />
 	<input id="btn_cancel" type="button" value="Cancel" {{canCancel}}>
+	</div>
 </Template>
 
 

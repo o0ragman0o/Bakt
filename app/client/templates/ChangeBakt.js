@@ -22,6 +22,9 @@ Template.ChangeBakt.helpers ({
 		console.log(TemplateVar.get("bakts"));
 		return TemplateVar.get("bakts");
 	},
+	'baktAddr': function () {
+		return TemplateVar.get("baktAddr");
+	},
 	'canCancel': function() {
 		if(!history.length) return 'disabled';
 	},

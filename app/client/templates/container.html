@@ -1,5 +1,19 @@
 <Template name="Container">
-    <div  class="bakt-container {{opState}} {{pending}}">
+<div class="bakt-container">
+{{> Template.dynamic template=page }}
+</div>
+<!--     <div  class="bakt-container {{opState}} {{pending}}">
+            {{#if hasBakt}}
+	            {{> Bakt }}
+	            {{> Holder }}
+	            {{> PendingTXList}}
+	            {{> Events}}
+            {{/if}}
+    </div>
+ --></Template>
+
+<Template name="BaktPanels">
+     <div  class="bakt-container {{opState}} {{pending}}">
             {{#if hasBakt}}
 	            {{> Bakt }}
 	            {{> Holder }}
@@ -8,4 +22,5 @@
             {{/if}}
     </div>
 </Template>
+
 
